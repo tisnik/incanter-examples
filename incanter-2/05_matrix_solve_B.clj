@@ -7,7 +7,7 @@
 
 ; dvojice rovnic:
 ; 3x + 2y = 8
-; x + y =2
+;  x +  y = 2
 
 ; matice s koeficienty na levé části rovnic
 (def A (matrix [[3 2] [1 1]]))
