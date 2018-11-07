@@ -1,5 +1,5 @@
 (ns deriv-fn-examples
-  (:use (incanter core stats charts deriv)))
+  (:use (incanter core stats charts symbolic)))
 
 (def pi java.lang.Math/PI)
 
