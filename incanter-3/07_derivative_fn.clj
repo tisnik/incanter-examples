@@ -21,3 +21,14 @@
 (doto (function-plot sinc -10 10 :x-label "t" :y-label "sinc + deriv sinc")
       (add-function (derivative sinc) -10 10)
       view)
+
+(doto (function-plot sinc -10 10 :x-label "t" :y-label "sinc + deriv sinc")
+      (add-function (derivative sinc :dx 5) -10 10)
+      view)
+
+(doto (function-plot sinc -10 10 :x-label "t" :y-label "sinc + deriv sinc")
+      (add-function (derivative sinc) -10 10)
+      (add-function (derivative sinc :dx 1/2) -10 10)
+      (add-function (derivative sinc :dx 1) -10 10)
+      (add-function (derivative sinc :dx 5) -10 10)
+      view)
