@@ -12,3 +12,8 @@
 (view (bar-chart indexy hody-kostkou :x-label "Pokusy" :y-label "Výsledek hodu" :legend true))
 
 (view (bar-chart indexy hody-kostkou :x-label "Pokusy" :y-label "Výsledek hodu" :legend true :title "Hody kostkou"))
+
+(def seasons (mapcat identity (repeat 3 ["jaro" "léto" "podzim" "zima"])))
+(def years (mapcat identity (repeat 4 [2016 2017 2018])))
+(def values (sample-uniform 12 :integers true :max 100))
+(view (bar-chart years values :group-by seasons :legend true :x-label "Rok" :y-label "Úroda"))
