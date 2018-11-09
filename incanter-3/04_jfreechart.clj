@@ -1,4 +1,4 @@
-(ns jfre-chart-interface
+(ns jfree-chart-interface
   (:use (incanter core stats charts)))
 
 (def x (range 0 100 0.5))
