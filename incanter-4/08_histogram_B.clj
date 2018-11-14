@@ -5,6 +5,9 @@
 (def hody-kostkou-2 (take 5000 (repeatedly #(inc (rand-int 6)))))
 (def hody-kostkou-3 (take 5000 (repeatedly #(inc (rand-int 6)))))
 
+; original idea:
+; https://stackoverflow.com/questions/27991054/center-incanter-histogram-x-axis-tick-marks-directly-underneath-bars#27992128
+
 (defn bar-chart-histogram
     [values]
     (let [freq (frequencies values)
