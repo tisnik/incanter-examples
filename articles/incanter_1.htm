@@ -1,0 +1,1660 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+<title>Incanter: prostředí pro statistické výpočty s grafickým výstupem založené na Clojure</title>
+<meta name="Author" content="Pavel Tisnovsky" />
+<meta name="Generator" content="vim" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<style type="text/css">
+         body {color:#000000; background:#ffffff;}
+         h1  {font-family: arial, helvetica, sans-serif; color:#ffffff; background-color:#c00000; text-align:center; padding-left:1em}
+         h2  {font-family: arial, helvetica, sans-serif; color:#ffffff; background-color:#0000c0; padding-left:1em; text-align:left}
+         h3  {font-family: arial, helvetica, sans-serif; color:#000000; background-color:#c0c0c0; padding-left:1em; text-align:left}
+         h4  {font-family: arial, helvetica, sans-serif; color:#000000; background-color:#e0e0e0; padding-left:1em; text-align:left}
+         a   {font-family: arial, helvetica, sans-serif;}
+         li  {font-family: arial, helvetica, sans-serif; color:#000000; text-align:justify; width:450px;}
+         ol  {font-family: arial, helvetica, sans-serif; color:#000000; text-align:justify; width:450px;}
+         ul  {font-family: arial, helvetica, sans-serif; color:#000000; text-align:justify; width:450px;}
+         p   {font-family: arial, helvetica, sans-serif; color:#000000; text-align:justify;}
+         pre {background:#e0e0e0}
+</style>
+</head>
+
+<body>
+
+<h1>Incanter: prostředí pro statistické výpočty s grafickým výstupem založené na Clojure</h1>
+
+<h3>Pavel Tišnovský</h3>
+
+<p></p>
+
+<h1>Úvodník</h1>
+
+<p>Čtenáři Rootu se již pravděpodobně setkali s projektem R určeným zejména pro statistické výpočty. Jednou ze zajímavých alternativ k R je projekt Incanter, který je založen na Clojure a běží nad JVM. Díky tomu je Incanter poměrně snadno rozšiřitelný o další moduly a může být flexibilnější než R.</p>
+
+
+
+<h2>Obsah</h2>
+
+<p><a href="#k01">1. Incanter: prostředí pro statistické výpočty s grafickým výstupem založené na Clojure</a></p>
+<p><a href="#k02">2. Proč Incanter vznikl a z&nbsp;jakého důvodu by nás mohl zajímat?</a></p>
+<p><a href="#k03">3. Nový programovací jazyk či &bdquo;pouhá&ldquo; knihovna?</a></p>
+<p><a href="#k04">4. Instalace projektu Incanter</a></p>
+<p><a href="#k05">5. První spuštění interaktivního prostředí projektu Incanter</a></p>
+<p><a href="#k06">6. Infixová notace v&nbsp;lispovském jazyku aneb síla makrosystému jazyka Clojure</a></p>
+<p><a href="#k07">7. Matice jakožto základní datová struktura, s&nbsp;níž Incanter pracuje</a></p>
+<p><a href="#k08">8. Základní informace o knihovně <strong>core.matrix</strong></a></p>
+<p><a href="#k09">9. Konstruktory matic</a></p>
+<p><a href="#k10">10. Vytvoření matice ze sekvence</a></p>
+<p><a href="#k11">11. Matice jako sekvence řádků</a></p>
+<p><a href="#k12">12. Základní operace s&nbsp;maticemi</a></p>
+<p><a href="#k13">13. Výpočet inverzní matice</a></p>
+<p><a href="#k14">14. Symbolické výpočty</a></p>
+<p><a href="#k15">15. Jednoduché grafy s&nbsp;průběhy funkcí</a></p>
+<p><a href="#k16">16. Zápis vzorců způsobem převzatým z&nbsp;LaTeXu</a></p>
+<p><a href="#k17">17. Uložení grafů do rastrových obrázků i do vektorového výkresu</a></p>
+<p><a href="#k18">18. Repositář s&nbsp;demonstračními příklady</a></p>
+<p><a href="#k19">19. Předchozí články o programovacím jazyku Clojure a jeho knihovnách</a></p>
+<p><a href="#k20">20. Odkazy na Internetu</a></p>
+
+
+
+<p><a name="k01"></a></p>
+<h2 id="k01">1. Incanter: prostředí pro statistické výpočty s grafickým výstupem založené na Clojure</h2>
+
+<p>Na stránce <a
+href="https://www.clojure-toolbox.com/">www.clojure-toolbox.com</a>, na níž se
+nachází nejužitečnější a samozřejmě taktéž nejpopulárnější knihovny a nástroje
+určené pro programovací jazyk <i>Clojure</i> popř.&nbsp;pro
+<i>ClojureScript</i>, nalezneme mj.&nbsp;i nástroj nazvaný <i>Incanter</i>.
+Jedná se o skupinu knihoven pro Clojure, jejichž cílem je vytvořit rychlejší a
+rozšiřitelnější alternativu k&nbsp;nástroji a programovacímu jazyku <i>R</i>,
+který se používá v&nbsp;oblasti statistických výpočtů, vizualizace dat apod.
+Základní informace o nepochybně zajímavém projektu <i>Incanter</i> získáte ze
+slajdů prezentace <a href="http://incanter.org/docs/data-sorcery-new.pdf">Data
+Sorcery with Clojure &amp; Incanter</a>. V&nbsp;krátkém seriálu, který dnes
+(tímto článkem) začíná na Rootu vycházet, se postupně seznámíme jak se
+základními postupy, tak i se složitějšími příklady použití Incanteru (datové
+zdroje, kombinované grafy apod.)</p>
+
+<a href="https://www.root.cz/obrazek/343003/"><img src="https://i.iinfo.cz/images/608/incanter1-1-prev.png" class="image-343003" alt="&#160;" width="370" height="55" /></a>
+<p><i>Obrázek 1: Logo projektu Incanter.</i></p>
+
+<p>Nástroj <i>Incanter</i> svým uživatelům nabízí zejména tyto funkce:</p>
+
+<ol>
+<li>Statistické funkce (nejenom ty základní, ale i poměrně pokročilé).</li>
+<li>Matematické funkce pro práci s&nbsp;vektory a maticemi.</li>
+<li>Podporu pro tvorbu různých typů grafů a pro vizualizaci dat.</li>
+<li>Export grafů do rastrových formátů popř.&nbsp;do <a href="https://www.root.cz/clanky/vektorovy-graficky-format-svg/">vektorového formátu SVG</a>.</li>
+<li>Funkce pro manipulaci s&nbsp;daty a s&nbsp;datovými zdroji (mj.&nbsp;i z Excelu atd.).</li>
+<li>Základní symbolické výpočty (prozatím je podporována symbolická derivace).</li>
+</ol>
+
+<p><div class="rs-tip-major">Poznámka: video <a
+href="https://www.youtube.com/watch?v=TVfL5nPELr4">Evolution of incanter
+(Gource Visualization)</a> ukazuje postupný vývoj Incanteru, i když neobsahuje
+poslední změny verze, kterou si dnes popíšeme.</div></p>
+
+<a href="https://www.root.cz/obrazek/343004/"><img src="https://i.iinfo.cz/images/608/incanter1-2-prev.png" class="image-343004" alt="&#160;" width="370" height="195" /></a>
+<p><i>Obrázek 2: Snímek z&nbsp;videa.</i></p>
+
+
+
+<p><a name="k02"></a></p>
+<h2 id="k02">2. Proč Incanter vznikl a z&nbsp;jakého důvodu by nás mohl zajímat?</h2>
+
+<p>Zajímavé a možná i poučné bude zjistit, z&nbsp;jakého důvodu vlastně projekt
+<i>Incanter</i> vznikl a proč by pro nás mohl být zajímavý, resp.&nbsp;proč
+použít <i>Incanter</i> a nikoli <i>R</i>, jazyk <i>Julia</i> či řešení založené
+na Pythonu). Hlavní motivací autorů tohoto projektu bylo vytvoření rozšiřitelné
+platformy určené pro statistické výpočty s&nbsp;umožněním vizualizace výsledků
+pomocí různých typů grafů. Tato platforma by měla uživatelům nabízet stejné či
+lepší vyjadřovací schopnosti než projekt <i>R</i>, ovšem s&nbsp;tím, že
+<i>Incanter</i> využije všech výhod aplikace běžící na virtuálním stroji Javy
+(JVM). Důvodem, proč je &ndash; minimálně slovy autorů &ndash; JVM vhodnou
+platformou, je mj.&nbsp;i to, že pro ni existuje prakticky nepřeberné množství
+knihoven určených pro načítání dat (použita je například knihovna <a
+href="https://data-sorcery.org/2010/05/31/xls-files/">xls</a>), zpracování dat,
+jejich konverzi, prezentaci, přístupu k&nbsp;různým databázím (relační,
+dokumentové, objektové) atd. (ostatně přímo Incanter používá rozhraní
+k&nbsp;MongoDB pro serializaci svých datových struktur).</p>
+
+<img src="https://i.iinfo.cz/images/608/incanter1-3.png" class="image-343005" alt="&#160;" width="400" height="310" />
+<p><i>Obrázek 3: Incanter je alternativou ke známému nástroji R.</i></p>
+
+<p>Nevýhodou běhu nad JVM oproti nativnímu kódu (ne oproti interpretu R!) jsou
+samozřejmě pomalejší výpočty, což se může negativně projevit při zpracování
+rozsáhlejších dat (nicméně zrovna v&nbsp;oblasti práce s&nbsp;homogenními
+maticemi je zpomalení přibližně &bdquo;jen&ldquo; 10-20% oproti
+optimalizovanému Fortranu &ndash; výsledky benchmarků si uvedeme příště). Na
+druhou stranu je možné pro JVM použít například knihovnu <a
+href="https://sites.google.com/site/piotrwendykier/software/parallelcolt">Parallel
+Colt</a>, která umožňuje některé výpočty provádět nativním kódem (BLAS, LAPACK,
+ARPACK, ATLAS atd.). Právě tato knihovna je v&nbsp;případě potřeby používána i
+systémem <i>Incanter</i>.</p>
+
+<p><div class="rs-tip-major">Poznámka: nutno doplnit, že dnes může být vhodnou
+platformou i ekosystém Pythonu, zejména při spojení možností knihoven
+<i>Numpy</i>, <i>SciPy</i>, <i>Matplotlib</i>, které lze popř.&nbsp;doplnit
+například knihovnou <i>Pandas</i>. Nicméně to je dosti rozsáhlé téma, které se
+zaslouží samostatný seriál :-), podobně jako samotný jazyk R.</div></p>
+
+<img src="https://i.iinfo.cz/images/608/incanter1-4.png" class="image-343006" alt="&#160;" width="400" height="158" />
+<p><i>Obrázek 4: V&nbsp;případě, že budete potřebovat použít jazyk R nad JVM,
+může vám pomoci projekt <strong>renjin</strong> (prozatím jsem nezkoušel, takže
+jen informuji o jeho existenci).</i></p>
+
+
+
+<p><a name="k03"></a></p>
+<h2 id="k03">3. Nový programovací jazyk či &bdquo;pouhá&ldquo; knihovna?</h2>
+
+<p>Po volbě platformy se autoři <i>Incanteru</i> zaměřili na další problém
+&ndash; jak vlastně uživatelům umožnit používat statistické funkce
+popř.&nbsp;funkce pro vykreslování grafů? V&nbsp;případě projektu <i>R</i> byl
+zvolen <a
+href="https://cran.r-project.org/doc/manuals/r-release/R-lang.html">vlastní
+programovací jazyk</a> s&nbsp;poměrně velkými vyjadřovacími schopnostmi, který
+navíc uživatele odstiňuje od nízkoúrovňových operací. V&nbsp;případ
+<i>Incanteru</i> je tomu jinak, protože se vlastně jedná o &bdquo;pouhou&ldquo;
+knihovnu naprogramovanou v&nbsp;jazyku Clojure. Ovšem Clojure, jakožto <a
+href="https://cs.wikipedia.org/wiki/Homoikonicita">homoikonický</a> jazyk
+s&nbsp;podporou maker, může posloužit pro tvorbu DSL (doménově specifických
+jazyků), což znamená, že nad čistým Clojure si uživatelé mohou postavit další
+vrstvu a tu používat. Současně jim ovšem Clojure nabízí již výše zmíněnou
+možnost použití libovolné knihovny, která pro JVM vznikla (díky <i>Java
+interop</i>). Velká flexibilita Clojure je ostatně jedním z&nbsp;důvodů, proč
+není <i>Incanter</i> určen přímo pro Javu jakožto primárního jazyka pro
+JVM.</p>
+
+<img src="https://i.iinfo.cz/images/608/incanter1-5.png" class="image-343007" alt="&#160;" width="400" height="104" />
+<p><i>Obrázek 5: Incanter používá mj.&nbsp;i známou a užitečnou knihovnu
+JFreeChart.</i></p>
+
+<p>Navíc volba lispovského jazyka, kterým <a
+href="https://clojure.org/about/lisp">Clojure i přes některé rozdíly nepochybně
+je</a>, není pro oblast statistických výpočtů zcela nesmyslná, protože stále
+ještě existuje početná komunita používající dnes již vlastně prastarý systém <a
+href="https://homepage.divms.uiowa.edu/~luke/xls/xlsinfo/xlsinfo.html">Lisp-Stat</a>
+(známý též jako <i>XLispStat</i>) popř.&nbsp;nástroje nad ním postavené,
+například program <a href="https://www.uv.es/visualstats/Book/">ViSTa</a> nebo
+<a href="http://www.stat.umn.edu/arc/">ARC</a>. <i>XLispStat</i>, který měl
+velký vliv na celý obor vizualizací statistických dat, se používal a &ndash;
+což je zajímavé &ndash; stále ještě používá například v&nbsp;oblasti GIS,
+epidemiologie, astronomie atd. (to je ostatně velmi poučné &ndash; některé
+obory mohou být v&nbsp;oblasti IT resp.&nbsp;používaných nástrojů hodně
+konzervativní). A právě pro tuto komunitu může být projekt <i>Incanter</i>
+užitečný. Ostatně i samotný jazyk R byl Lispem ovlivněn, zejména ve svých
+počátcích.</p>
+
+<p><div class="rs-tip-major">Poznámka: pokud vás zajímají některé důvody pro
+použití lispovského jazyka v&nbsp;oblasti statistických výpočtů, přečtete si
+článek <a
+href="https://www.researchgate.net/publication/227019917_Back_to_the_Future_Lisp_as_a_Base_for_a_Statistical_Computing_System">Back
+to the Future: Lisp as a Base for a Statistical Computing System</a> (opět
+&ndash; jedná se o deset let starý článek, nicméně je stále validní, i když
+vlastně nediskutuje to hlavní &ndash; vlastní implementaci systému založeného
+na Lispu).</div></p>
+
+<p><div class="rs-tip-major">Mezi moderní přístupy k&nbsp;&bdquo;array
+programming&ldquo; patří již zmíněný jazyk <i>R</i>, dále programovací jazyk
+Julia a samozřejmě též knihovna Numpy určená pro Python.</div></p>
+
+
+
+<p><a name="k04"></a></p>
+<h2 id="k04">4. Instalace projektu Incanter</h2>
+
+<p>Na stránkách projektu Incanter nalezneme Java Archiv (jar), který obsahuje
+všechny potřebné knihovny a pro svou činnost vyžaduje pouze přítomnost JRE
+(<i>Java Runtime Environment</i>). Problém je, že tento archiv je založen na
+dnes již notně zastaralé verzi <i>Incanteru</i>, takže bude lepší si provést
+překlad a instalaci verze vlastní. Budete potřebovat Clojure (aspoň verze 1.7)
+a taktéž nástroj <a
+href="https://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure/">Leiningen</a>;
+všechny další knihovny a nástroje se stáhnou automaticky při překladu.</p>
+
+<p>Nejdříve naklonujeme celý repositář:</p>
+
+<pre>
+$ <strong>git clone https://github.com/incanter/incanter</strong>
+&nbsp;
+Cloning into 'incanter'...
+remote: Enumerating objects: 13863, done.
+remote: Total 13863 (delta 0), reused 0 (delta 0), pack-reused 13863
+Receiving objects: 100% (13863/13863), 41.45 MiB | 4.19 MiB/s, done.
+Resolving deltas: 100% (8228/8228), done.
+Checking connectivity... done.
+</pre>
+
+<p>Přejdeme do vytvořeného podadresáře:</p>
+
+<pre>
+cd incanter/
+</pre>
+
+<p>V&nbsp;případě některých verzí JVM je nutné nastavit proměnnou prostředí
+<strong>LEIN_JVM_OPTS</strong> tak, jak je to popsáno <a
+href="https://github.com/technomancy/leiningen/issues/2364">zde</a>. Toto
+nastavení zajistí, že nástroj Leiningen bude schopen stáhnout všechny potřebné
+balíčky:</p>
+
+<pre>
+$ <strong>export LEIN_JVM_OPTS=-Dhttps.protocols=TLSv1.2</strong>
+</pre>
+
+<p>Následuje vlastní překlad, v&nbsp;jehož rámci se stáhnou potřebné knihovny a
+uloží se do podadresáře <strong>~/.m2</strong>:</p>
+
+<pre>
+$ <strong>lein sub install</strong>
+&nbsp;
+Reading project from modules/incanter-core
+Retrieving org/clojure/spec.alpha/0.1.143/spec.alpha-0.1.143.pom from central
+...
+...
+...
+Retrieving swingrepl/swingrepl/1.3.0/swingrepl-1.3.0.jar from clojars
+Created /home/tester/temp/out/xxx/incanter/./target/incanter-1.9.4-SNAPSHOT.jar
+Wrote /home/tester/temp/out/xxx/incanter/./pom.xml
+Installed jar and pom into local repo.
+</pre>
+
+
+
+<p><a name="k05"></a></p>
+<h2 id="k05">5. První spuštění interaktivního prostředí projektu Incanter</h2>
+
+<p><i>Incanter</i> používá, podobně jako další projekty se stejným zaměřením,
+vlastní interaktivní smyčku REPL. Tu spustíme přímo z&nbsp;adresáře, kam byl
+naklonován repositář projektu:</p>
+
+<pre>
+$ <strong>cd incanter/</strong>
+</pre>
+
+<p>Nyní již můžeme interaktivní smyčku REPL spustit:</p>
+
+<pre>
+$ <strong>lein repl</strong>
+</pre>
+
+<p>Měla by se vypsat klasická uvítací obrazovka REPLu jazyka Clojure:</p>
+
+<pre>
+nREPL server started on port 52443 on host 127.0.0.1 - nrepl://127.0.0.1:52443
+REPL-y 0.3.5, nREPL 0.2.6
+Clojure 1.8.0
+OpenJDK 64-Bit Server VM 1.7.0_79-b14
+    Docs: (doc function-name-here)
+          (find-doc "part-of-name-here")
+  Source: (source function-name-here)
+ Javadoc: (javadoc java-object-or-class-here)
+    Exit: Control+D or (exit) or (quit)
+ Results: Stored in vars *1, *2, *3, an exception in *e
+</pre>
+
+<p>Dále můžeme otestovat, jestli jsou na CLASSPATH umístěny všechny důležité
+knihovny Incanteru:</p>
+
+<pre>
+<strong>(use '(incanter core stats charts))</strong>
+nil
+</pre>
+
+<p>Pokud se skutečně vypíše pouze <strong>nil</strong>, znamená to, že knihovny
+je možné použít. Zkusme si tedy vykreslit například histogram náhodných hodnot
+s&nbsp;normálním rozložením:</p>
+
+<pre>
+(view (histogram (sample-normal 1000)))
+</pre>
+
+<img src="https://i.iinfo.cz/images/608/incanter1-6.png" class="image-343008" alt="&#160;" width="500" height="400" />
+<p><i>Obrázek 6: Histogram náhodných hodnot s&nbsp;normálním
+rozložením.</i></p>
+
+<p>Parametry histogramu jsou samozřejmě plně konfigurovatelné. Podrobnosti si
+řekneme příště:</p>
+
+<pre>
+(view (histogram (sample-normal 100000) :nbins 50 :title "Normální rozložení" :legend true :y-label "Četnost"))
+</pre>
+
+<img src="https://i.iinfo.cz/images/608/incanter1-7.png" class="image-343009" alt="&#160;" width="502" height="402" />
+<p><i>Obrázek 7: Upravený histogram.</i></p>
+
+
+
+<p><a name="k06"></a></p>
+<h2 id="k06">6. Infixová notace v&nbsp;lispovském jazyku aneb síla makrosystému jazyka Clojure</h2>
+
+<p><i>Incanter</i> je sice knihovna (resp.&nbsp;skupina knihoven) určená pro
+programovací jazyk Clojure, který je založen na lispovské syntaxi volání
+funkcí, ovšem díky existenci makra <strong>$=</strong> je možné výrazy
+zapisovat i v&nbsp;infixové podobě, a to včetně správného vyhodnocení priorit
+operátorů. Podívejme se na několik příkladů.</p>
+
+<p>Základní aritmetické operátory s&nbsp;vyhodnocením priorit:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>($= 1 + 2)</strong>
+3
+&nbsp;
+incanter.irepl=&gt; <strong>($= 1 + 2 * 3)</strong>
+7
+</pre>
+
+<p><div class="rs-tip-major">Poznámka: operandy musíte oddělit mezerou, jinak
+dojde při expanzi makra k&nbsp;chybě.</div></p>
+
+<p>Operátor pro umocnění se zapisuje pomocí dvojice hvězdiček:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>($= 2 ** 10)</strong>
+1024.0
+&nbsp;
+incanter.irepl=&gt; <strong>($= 2 ** -4))</strong>
+0.0625
+</pre>
+
+<p>Clojure se snaží při dělení celých čísel vyjádřit výsledek formou
+zlomku:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>($= 10 + 20 * (4 - 5) / 6)</strong>
+20/3
+</pre>
+
+<p>Zpracovat lze dokonce i vektory a matice (operátory jsou přetížené):</p>
+
+<pre>
+incanter.irepl=&gt; <strong>($= [1 2 3] + [4 5 6])</strong>
+[5 7 9]
+&nbsp;
+incanter.irepl=&gt; <strong>($= [1 2 3] * [4 5 6])</strong>
+[4 10 18]
+&nbsp;
+incanter.irepl=&gt; <strong>($= [[1 2][3 4]] + [[5 6][7 8]])</strong>
+[[6 8] [10 12]]
+</pre>
+
+<p>Využití <i>broadcastingu</i> popsaného dále:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>($= [1 2 3] + 10)</strong>
+[11 12 13]
+&nbsp;
+incanter.irepl=&gt; <strong>($= [1 2 3] * -1)</strong>
+[-1 -2 -3]
+</pre>
+
+<p>Výsledky jsou typu:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(type ($= [[1 2][3 4]] + [[5 6][7 8]]))</strong>
+clojure.lang.PersistentVector
+&nbsp;
+incanter.irepl=&gt; <strong>(type ($= [1 2 3] * -1))</strong>
+clojure.lang.PersistentVector
+</pre>
+
+
+
+<p><a name="k07"></a></p>
+<h2 id="k07">7. Matice jakožto základní datová struktura, s&nbsp;níž Incanter pracuje</h2>
+
+<p>Projekt <i>Incanter</i> je založen na zpracování (rozsáhlých) matic a
+tzv.&nbsp;datasetů. Ve skutečnosti však klasicky chápané matice v&nbsp;Clojure
+příliš podporovány nejsou. Při studiu základních knihoven Clojure lze dojít
+k&nbsp;závěru, že vlastně jen velmi málo funkcí a maker je určeno pro práci
+s&nbsp;těmito datovými typy, i když je samozřejmě možné jak vektory, tak i
+matice velmi snadno reprezentovat s&nbsp;využitím základních sekvenčních
+datových struktur Clojure &ndash; seznamů a vektorů. Ve skutečnosti to však
+není zcela ideální řešení, a to hned z&nbsp;několika důvodů, jejichž společným
+rysem je rychlost prováděných operací. Z&nbsp;tohoto důvodu je v&nbsp;případě
+implementace algoritmů, v&nbsp;nichž se intenzivně používají operace
+s&nbsp;maticemi, mnohem výhodnější využít možností specializovaných knihoven.
+My se dnes seznámíme především s&nbsp;elegantně navrženou knihovnou
+<strong>core.matrix</strong>, protože ta je používána i projektem
+<i>Incanter</i>.</p>
+
+<p><div class="rs-tip-major">Poznámka: nesmíme taktéž zapomenout na způsob
+reprezentace datových struktur v&nbsp;operační paměti. Matice jsou většinou
+homogenní datovou strukturou, kterou lze v&nbsp;případě, že prvky jsou
+primitivního datového typu, uložit v&nbsp;kompaktní podobě. U obecných vektorů
+a sekvencí jazyka Clojure tomu tak však není. Problematikou uložené polí
+primitivních typů na haldě v&nbsp;JVM jsme se zabývali v&nbsp;článku <a
+href="https://www.root.cz/clanky/pohled-pod-kapotu-jvm-jak-efektivne-jsou-ulozena-pole-a-retezce-na-halde/">Pohled
+pod kapotu JVM - jak efektivně jsou uložena pole a řetězce na haldě?</a> (viz
+například šestou kapitolu).</div></p>
+
+<p>V&nbsp;přednášce nazvané velmi příhodně &bdquo;Enter the Matrix&ldquo;,
+která je dostupná na adrese <a
+href="http://www.slideshare.net/mikeranderson/2013-1114-enter-thematrix">http://www.slideshare.net/mikeranderson/2013-1114-enter-thematrix</a>,
+je mj.&nbsp;ukázáno, jakým způsobem jsou v&nbsp;Clojure implementována různá
+paradigmata programování. Díky podpoře maker a způsobu zápisu programového kódu
+v&nbsp;Clojure lze velmi snadno implementovat různé doménově specifické jazyky
+(DSL), mj.&nbsp;i právě jazyk pro array programming:</p>
+
+<table>
+<tr><th>Paradigma</th><th>Jazyk</th><th>Implementace v&nbsp;Clojure</th></tr>
+<tr><td>funkcionální</td><td>Haskell</td><td>clojure.core</td></tr>
+<tr><td>OOP</td><td>Smalltalk</td><td>clojure.core</td></tr>
+<tr><td>metaprogramování</td><td>Lisp</td><td>clojure.core</td></tr>
+<tr><td>logické</td><td>Prolog</td><td>core.logic</td></tr>
+<tr><td>array programming</td><td>APL, J</td><td>core.matrix</td></tr>
+</table>
+
+<p><div class="rs-tip-major">Poznámka: původní tabulka byla upravena a
+doplněna.</div></p>
+
+
+
+<p><a name="k08"></a></p>
+<h2 id="k08">8. Základní informace o knihovně <strong>core.matrix</strong></h2>
+
+<p>Knihovna nazvaná <strong>core.matrix</strong> je určená těm vývojářům, kteří
+ve svých projektech potřebují provádět velké množství operací s&nbsp;maticemi
+různých dimenzí, a to na poměrně vysoké úrovni, tj.&nbsp;bez nutnosti přesně
+specifikovat, jak mají být matice uloženy v&nbsp;paměti, jakým způsobem
+provádět operaci násobení matic atd. Díky tomuto přístupu a taktéž díky
+vlastnostem programovacího jazyka <i>Clojure</i> (existence tzv.&nbsp;threading
+makra a funkcí vyššího řádu) se práce s&nbsp;maticemi do značné míry začíná
+podobat práci v&nbsp;APL, až na ten rozdíl, že algoritmy zapisované
+v&nbsp;<i>Clojure</i> jsou pro většinu vývojářů přece jen čitelnější :-).
+Taktéž je důležité, že <i>rozhraní</i> definované v&nbsp;knihovně
+<strong>core.matrix</strong> může mít několik implementací. V&nbsp;současnosti
+se jedná o <i>vectorz-clj</i>, <i>Clatrix</i> a <i>NDArray</i>.
+V&nbsp;<strong>core.matrix</strong> navíc došlo k&nbsp;rozšíření operátorů +, -
+atd. takovým způsobem, že je lze použít i pro zpracování vektorů a matic (ve
+skutečnosti se samozřejmě nejedná o skutečné operátory, protože tento koncept
+<i>Clojure</i> nepotřebuje).</p>
+
+
+
+<p><a name="k09"></a></p>
+<h2 id="k09">9. Konstruktory matic</h2>
+
+<p>Skutečný vektor či matice se vytvoří konstruktorem <strong>matrix</strong>.
+Povšimněte si, že tomuto konstruktoru můžete předat klasický vektor
+programovacího jazyka Clojure; samozřejmě lze předat i vektor vektorů:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(matrix [[1 2] [4 5]])</strong>
+#vectorz/matrix [[1.0,2.0],
+[4.0,5.0]]
+&nbsp;
+incanter.irepl=&gt; <strong>(matrix [1 2 3])</strong>
+#vectorz/vector [1.0,2.0,3.0]
+</pre>
+
+<p>Dalším způsobem konstrukce matice je určení hodnoty všech prvků; za touto
+hodnotou následuje určení rozměrů matice:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(matrix 0 10 10)</strong>
+#vectorz/matrix [[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],
+[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],
+[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],
+[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],
+[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],
+[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],
+[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],
+[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],
+[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],
+[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]]
+</pre>
+
+<p>Povšimněte si, že i zlomky se automaticky převádí na typ <i>float</i>:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(matrix 1/2 5 5)</strong>
+#vectorz/matrix [[0.5,0.5,0.5,0.5,0.5],
+[0.5,0.5,0.5,0.5,0.5],
+[0.5,0.5,0.5,0.5,0.5],
+[0.5,0.5,0.5,0.5,0.5],
+[0.5,0.5,0.5,0.5,0.5]]
+</pre>
+
+<p>Nejdříve se zadává počet řádků, poté počet sloupců:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(matrix 1 3 5)</strong>
+#vectorz/matrix [[1.0,1.0,1.0,1.0,1.0],
+[1.0,1.0,1.0,1.0,1.0],
+[1.0,1.0,1.0,1.0,1.0]]
+</pre>
+
+<pre>
+incanter.irepl=&gt; <strong>(matrix 1 8 3)</strong>
+#vectorz/matrix [[1.0,1.0,1.0],
+[1.0,1.0,1.0],
+[1.0,1.0,1.0],
+[1.0,1.0,1.0],
+[1.0,1.0,1.0],
+[1.0,1.0,1.0],
+[1.0,1.0,1.0],
+[1.0,1.0,1.0]]
+</pre>
+
+
+
+<p><a name="k10"></a></p>
+<h2 id="k10">10. Vytvoření matice ze sekvence</h2>
+
+<p>Vytvoření dvourozměrné matice výčtem prvků již známe:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(matrix [[1 2 3] [4 5 6] [7 8 9]])</strong>
+#vectorz/matrix [[1.0,2.0,3.0],
+[4.0,5.0,6.0],
+[7.0,8.0,9.0]]
+</pre>
+
+<p>Alternativně je možné prvky specifikovat v&nbsp;jednorozměrném vektoru a
+pouze přidat informaci o tom, jaké má matice rozměry:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(matrix [1 2 3 4 5 6 7 8 9] 3)</strong>
+#vectorz/matrix [[1.0,2.0,3.0],
+[4.0,5.0,6.0],
+[7.0,8.0,9.0]]
+</pre>
+
+<p>Přebytečné prvky, které netvoří obdélníkovou matici, se nepoužijí:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(matrix [1 2 3 4 5 6 7 8 9] 2)</strong>
+#vectorz/matrix [[1.0,2.0],
+[3.0,4.0],
+[5.0,6.0],
+[7.0,8.0]]
+</pre>
+
+<p>Kromě vektoru je samozřejmě použít libovolnou sekvenci podporovanou programovacím jazykem Clojure, takže matici 3&times;3 prvky můžeme vytvořit i takto:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(matrix (range 1 10) 3)</strong>
+#vectorz/matrix [[1.0,2.0,3.0],
+[4.0,5.0,6.0],
+[7.0,8.0,9.0]]
+</pre>
+
+<p>Sloupcový vektor se vytvoří stejně snadno:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(matrix (range 1 10) 1)</strong>
+#vectorz/matrix [[1.0],
+[2.0],
+[3.0],
+[4.0],
+[5.0],
+[6.0],
+[7.0],
+[8.0],
+[9.0]]
+</pre>
+
+<p>Samozřejmě je možné použít i složitější zápisy &ndash; zde se žádná omezení
+nekladou:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(matrix (map #(* 2 %) (take 25 (range))) 5)</strong>
+#vectorz/matrix [[0.0,2.0,4.0,6.0,8.0],
+[10.0,12.0,14.0,16.0,18.0],
+[20.0,22.0,24.0,26.0,28.0],
+[30.0,32.0,34.0,36.0,38.0],
+[40.0,42.0,44.0,46.0,48.0]]
+</pre>
+
+<p><div class="rs-tip-major">Poznámka: v&nbsp;předchozím příkladu je použita
+nekonečná lazy sekvence, kterou zpracováváme a získáme prvních 25
+prvků.</div></p>
+
+
+
+<p><a name="k11"></a></p>
+<h2 id="k11">11. Matice jako sekvence řádků</h2>
+
+<p>Z&nbsp;pohledu jazyka Clojure lze matici zpracovávat jako sekvenci
+jednotlivých řádků, což je poměrně užitečná vlastnost. Nejprve si vytvořme
+matici o rozměrech 3&times;3 prvky:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(def M (matrix (range 1 10) 3))</strong>
+#'incanter.irepl/M
+</pre>
+
+<p>Kontrola obsahu matice:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>M</strong>
+#vectorz/matrix [[1.0,2.0,3.0],
+[4.0,5.0,6.0],
+[7.0,8.0,9.0]]
+</pre>
+
+<p>Dále můžeme získat první řádek matice, a to běžnou funkcí
+<strong>first</strong>:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(first M)</strong>
+#vectorz/vector [1.0,2.0,3.0]
+</pre>
+
+<p><div class="rs-tip-major">Poznámka: v&nbsp;tomto případě se vrátil
+<i>vektor</i>.</div></p>
+
+<p>Získání všech řádků kromě řádku prvního:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(rest M)</strong>
+(#vectorz/vector [4.0,5.0,6.0] #vectorz/vector [7.0,8.0,9.0])
+</pre>
+
+<p><div class="rs-tip-major">Poznámka: nyní se vrátila <i>sekvence vektorů</i>,
+přesně podle popisu funkce <strong>rest</strong>.</div></p>
+
+<p>Díky tomu, že v&nbsp;základní knihovně jazyka Clojure nalezneme velké
+množství funkcí a maker pro zpracování sekvencí, lze například snadno sečíst
+všechny hodnoty v&nbsp;jednotlivých sloupcích matice:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(reduce plus M)</strong>
+#vectorz/vector [12.0,15.0,18.0]
+</pre>
+
+<p>Popř.&nbsp;si naopak můžeme vyčíslit součty prvků na jednotlivých řádcích:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(map sum M)</strong>
+(6.0 15.0 24.0)
+</pre>
+
+<p>Poznámka: povšimněte si, že se pokaždé vrátil jiný datový typ. Z&nbsp;tohoto
+důvodu je lepší při práci s&nbsp;maticemi používat operace popsané níže.</p>
+
+<p>Další operace (pravděpodobně ne příliš užitečné):</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(map first M)</strong>
+(1.0 4.0 7.0)
+&nbsp;
+incanter.irepl=&gt; <strong>(map second M)</strong>
+(2.0 5.0 8.0)
+</pre>
+
+
+
+<p><a name="k12"></a></p>
+<h2 id="k12">12. Základní operace s&nbsp;maticemi</h2>
+
+<p>Podívejme se nyní na některé základní operace s&nbsp;maticemi. Tomuto tématu
+bude věnován samostatný článek, ale krátkou ukázku si můžeme předvést již dnes.
+Nejdříve si opět vytvoříme matici:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(def A (matrix [[1 2 3]</strong>
+            #_=&gt;                 <strong>[4 5 6]</strong>
+            #_=&gt;                 <strong>[7 8 9]]))</strong>
+#'incanter.irepl/A
+</pre>
+
+<p>Broadcasting umožňuje převést číslo na matici stejného řádu, jakou má druhý
+operand:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>($= A + 2)</strong>
+#vectorz/matrix [[3.0,4.0,5.0],
+[6.0,7.0,8.0],
+[9.0,10.0,11.0]]
+</pre>
+
+<p>Vynásobení matice konstantou (skalárem):</p>
+
+<pre>
+incanter.irepl=&gt; <strong>($= A * -1)</strong>
+#vectorz/matrix [[-1.0,-2.0,-3.0],
+[-4.0,-5.0,-6.0],
+[-7.0,-8.0,-9.0]]
+</pre>
+
+<p>Vynásobení matice a vektoru, který byl opět rozšířen na matici:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>($= A * [5 0 5])</strong>
+#vectorz/matrix [[5.0,0.0,15.0],
+[20.0,0.0,30.0],
+[35.0,0.0,45.0]]
+</pre>
+
+<p>Skutečný &bdquo;maticový&ldquo; součin matice a vektoru:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(mmult A [5 0 0])</strong>
+#vectorz/vector [5.0,20.0,35.0]
+</pre>
+
+<p>Matici můžeme transponovat:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(trans A)</strong>
+#vectorz/matrix [[1.0,4.0,7.0],
+[2.0,5.0,8.0],
+[3.0,6.0,9.0]]
+</pre>
+
+<p>Můžeme provést vynásobení původní matice s&nbsp;maticí transponovanou:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(mmult A (trans A))</strong>
+#vectorz/matrix [[14.0,32.0,50.0],
+[32.0,77.0,122.0],
+[50.0,122.0,194.0]]
+</pre>
+
+<p>Další složitější varianta:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(mmult A (trans A) A)</strong>
+#vectorz/matrix [[492.0,588.0,684.0],
+[1194.0,1425.0,1656.0],
+[1896.0,2262.0,2628.0]]
+</pre>
+
+
+
+<p><a name="k13"></a></p>
+<h2 id="k13">13. Výpočet inverzní matice</h2>
+
+<p>Výpočet inverzní matice zajišťuje funkce <strong>solve</strong>:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(solve (matrix [[2 0 0] [0 2 0] [0 0 2]]))</strong>
+#vectorz/matrix [[0.5,0.0,0.0],
+[0.0,0.5,0.0],
+[0.0,0.0,0.5]]
+</pre>
+
+<p>Kontrola předchozího výpočtu:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(mmult (solve (matrix [[2 0 0] [0 2 0] [0 0 2]])) (matrix [[2 0 0] [0 2 0] [0 0 2]]))</strong>
+#vectorz/matrix [[1.0,0.0,0.0],
+[0.0,1.0,0.0],
+[0.0,0.0,1.0]]
+</pre>
+
+<p><div class="rs-tip-major">Poznámka: pokud inverzní matici nelze vypočítat,
+vrátí se <strong>nil</strong>.</div></p>
+
+
+
+<p><a name="k14"></a></p>
+<h2 id="k14">14. Symbolické výpočty</h2>
+
+<p>Knihovna <i>Incanter</i> sice v&nbsp;žádném případě nedokáže nahradit
+<i>Mathematicu</i> nebo <i>Maple</i>, ovšem obsahuje i modul pro symbolické
+výpočty, tj.&nbsp;(velmi zjednodušeně řečeno) pro úpravy výrazů a rovnic na
+základě manipulace se symboli a nikoli na základě numerických výpočtů. Prozatím
+je podporován především výpočet derivace podle zvolené proměnné. Ukažme si
+jednoduché příklady.</p>
+
+<p>Načtení knihovny:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(use '(incanter symbolic))</strong>
+nil
+</pre>
+
+<p>Derivace funkce sinus podle proměnné x:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(deriv (sin x) x)</strong>
+(cos x)
+</pre>
+
+<p>Složitější výraz s&nbsp;jedinou proměnnou:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(deriv (cos (* x x)) x)</strong>
+(* (+ x x) (* -1 (sin (* x x))))
+</pre>
+
+<p>Další nepatrně složitější výraz:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(deriv (+ (cos x) (tan x)) x)</strong>
+(+ (pow (cos x) -2) (* -1 (sin x)))
+</pre>
+
+<p>Derivace stejné funkce, ovšem pro rozdílné proměnné:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(deriv (/ (+ (cos x) (tan y)) (ln z)) x)</strong>
+(+ (* (* (pow (* 1 (+ (cos x) (tan y)) (ln z))) -1) (* -1 (sin x))) (* (* -1 (deriv* (pow (* 1 (+ (cos x) (tan y)) (ln z))) x)) (+ (cos x) (tan y))))
+&nbsp;
+incanter.irepl=&gt; <strong>(deriv (/ (+ (cos x) (tan y)) (ln z)) y)</strong>
+(+ (* (* (pow (* 1 (+ (cos x) (tan y)) (ln z))) -1) (pow (cos y) -2)) (* (* -1 (deriv* (pow (* 1 (+ (cos x) (tan y)) (ln z))) y)) (+ (cos x) (tan y))))
+&nbsp;
+incanter.irepl=&gt; <strong>(deriv (/ (+ (cos x) (tan y)) (ln z)) z)</strong>
+(* (* -1 (deriv* (pow (* 1 (+ (cos x) (tan y)) (ln z))) z)) (+ (cos x) (tan y)))
+</pre>
+
+
+
+<p><a name="k15"></a></p>
+<h2 id="k15">15. Jednoduché grafy s&nbsp;průběhy funkcí</h2>
+
+<p>Nejjednodušším typem grafu je graf s&nbsp;průběhem zvolené funkce. Samotný
+graf se vytvoří pomocí <strong>function-plot</strong>, což je funkce vyššího
+řádu, které lze předat libovolnou jinou aritmetickou funkci a taktéž rozsah
+hodnot nezávislé proměnné. Výsledek lze zobrazit funkcí <strong>view</strong>.
+Nesmíte samozřejmě zapomenout na import knihovny <strong>charts</strong>:</p>
+
+<pre>
+(use '(incanter core charts))
+&nbsp;
+(view (function-plot (fn [x] (sin x)) -10 10))
+</pre>
+
+<img src="https://i.iinfo.cz/images/608/incanter1-8.png" class="image-343010" alt="&#160;" width="500" height="400" />
+<p><i>Obrázek 8: Graf s&nbsp;průběhem funkce sinus.</i></p>
+
+<p>Osobně ovšem doporučuji jiný styl zápisu využívající threading makro:</p>
+
+<pre>
+(-&gt;
+    (fn [x] (sin x))
+    (function-plot -10 10)
+    view)
+</pre>
+
+<p>Výsledkem bude naprosto stejný graf, jako v&nbsp;příkladu předchozím.</p>
+
+
+
+<p><a name="k16"></a></p>
+<h2 id="k16">16. Zápis vzorců způsobem převzatým z&nbsp;LaTeXu</h2>
+
+<p>Jen v&nbsp;rychlosti (alespoň prozatím) si ukažme, jakým způsobem se do
+grafů přidávají vzorce zapsané a vysázené podobně, jako v&nbsp;LaTeXu. Používá
+se k&nbsp;tomu funkce <strong>add-latex</strong>, například:</p>
+
+<pre>
+(add-latex 0 250 "x^3 - 5x^2 + 3x +5")
+</pre>
+
+<p>Tato funkce přidá návěští přímo do grafu. Nesmíme samozřejmě zapomenout na
+importy:</p>
+
+<pre>
+(use '(incanter core charts latex))
+</pre>
+
+<p>Můžeme zde s&nbsp;výhodou použít standardní makro <strong>doto</strong>:</p>
+
+<pre>
+(doto (function-plot (fn [x] ($= x ** 3 - 5 * x ** 2 + 3 * x + 5)) -10 10)
+  (add-latex 0 250 "x^3 - 5x^2 + 3x +5")
+  view)
+</pre>
+
+<img src="https://i.iinfo.cz/images/608/incanter1-9.png" class="image-343011" alt="&#160;" width="500" height="400" />
+<p><i>Obrázek 9: Výsledek předchozího příkazu.</i></p>
+
+
+
+<p><a name="k17"></a></p>
+<h2 id="k17">17. Uložení grafů do rastrových obrázků i do vektorového výkresu</h2>
+
+<p>Kromě funkce <strong>view</strong>, která graf vykreslí do samostatného
+okna, ho můžeme uložit do rastrového souboru funkcí <strong>save</strong>.
+Například:</p>
+
+<pre>
+(ns png-output
+  (:use (incanter core stats charts svg)))
+&nbsp;
+(save (histogram (sample-normal 1000))  "histogram1.png")
+(save (histogram (sample-normal 100000) :nbins 50 :title "Normální rozložení" :legend true :y-label "Četnost")  "histogram2.png")
+(save (function-plot (fn [x] ($= x ** 3 - 5 * x ** 2 + 3 * x + 5)) -10 10)  "funkce.png")
+</pre>
+
+<p>Někdy může být výhodnější použít export do vektorového formátu SVG:</p>
+
+<pre>
+(ns svg-output
+  (:use (incanter core stats charts svg)))
+&nbsp;
+(save-svg (histogram (sample-normal 1000))  "histogram1.svg")
+(save-svg (histogram (sample-normal 100000) :nbins 50 :title "Normální rozložení" :legend true :y-label "Četnost")  "histogram2.svg")
+(save-svg (function-plot (fn [x] ($= x ** 3 - 5 * x ** 2 + 3 * x + 5)) -10 10)  "funkce.svg")
+</pre>
+
+<p>Podrobnosti si vysvětlíme příště.</p>
+
+
+
+<p><a name="k18"></a></p>
+<h2 id="k18">18. Repositář s&nbsp;demonstračními příklady</h2>
+
+<p>Zdrojové kódy všech dnes popsaných demonstračních příkladů byly uloženy do
+Git repositáře dostupného na adrese <a
+href="https://github.com/tisnik/incanter-examples">https://github.com/tisnik/incanter-examples</a>
+(stále na GitHubu :-). V&nbsp;případě, že nebudete chtít klonovat celý
+repositář (ten je ovšem stále velmi malý, dnes má doslova několik kilobajtů),
+můžete namísto toho použít odkazy na jednotlivé příklady, které naleznete
+v&nbsp;následující tabulce:</p>
+
+<table>
+<tr><th>#</th><th>Demonstrační příklad</th><th>Popis</th><th>Cesta</th></tr>
+<tr><td>1</td><td>introduction.clj</td><td>otestování funkčnosti Incanteru</td><td><a href="https://github.com/tisnik/incanter-examples/blob/master/incanter-1/introduction.clj">https://github.com/tisnik/incanter-examples/blob/master/incanter-1/introduction.clj</a></td></tr>
+<tr><td>2</td><td>infix.clj</td><td>použití infix operátorů</td><td><a href="https://github.com/tisnik/incanter-examples/blob/master/incanter-1/infix.clj">https://github.com/tisnik/incanter-examples/blob/master/incanter-1/infix.clj</a></td></tr>
+<tr><td>3</td><td>matrices.clj</td><td>práce s maticemi</td><td><a href="https://github.com/tisnik/incanter-examples/blob/master/incanter-1/matrices.clj">https://github.com/tisnik/incanter-examples/blob/master/incanter-1/matrices.clj</a></td></tr>
+<tr><td>4</td><td>png_output.clj</td><td>uložení grafu do PNG</td><td><a href="https://github.com/tisnik/incanter-examples/blob/master/incanter-1/png_output.clj">https://github.com/tisnik/incanter-examples/blob/master/incanter-1/png_output.clj</a></td></tr>
+<tr><td>5</td><td>svg_output.clj</td><td>uložení grafu do SVG</td><td><a href="https://github.com/tisnik/incanter-examples/blob/master/incanter-1/svg_output.clj">https://github.com/tisnik/incanter-examples/blob/master/incanter-1/svg_output.clj</a></td></tr>
+<tr><td>6</td><td>heat_map.clj</td><td>tzv.&bdquo;heat mapy&ldquo;</td><td><a href="https://github.com/tisnik/incanter-examples/blob/master/incanter-1/heat_map.clj">https://github.com/tisnik/incanter-examples/blob/master/incanter-1/heat_map.clj</a></td></tr>
+<tr><td>7</td><td>parametric_plot.clj</td><td>jednoduchý parametrický graf</td><td><a href="https://github.com/tisnik/incanter-examples/blob/master/incanter-1/parametric_plot.clj">https://github.com/tisnik/incanter-examples/blob/master/incanter-1/parametric_plot.clj</a></td></tr>
+</table>
+
+
+
+<p><a name="k19"></a></p>
+<h2 id="k19">19. Předchozí články o programovacím jazyku Clojure a jeho knihovnách</h2>
+
+<ol>
+
+<li>Clojure  1: Úvod<br />
+<a href="http://www.root.cz/clanky/clojure-aneb-jazyk-umoznujici-tvorbu-bezpecnych-vicevlaknovych-aplikaci-pro-jvm/">http://www.root.cz/clanky/clojure-aneb-jazyk-umoznujici-tvorbu-bezpecnych-vicevlaknovych-aplikaci-pro-jvm/</a>
+</li>
+
+<li>Clojure  2: Symboly, kolekce atd.<br />
+<a href="http://www.root.cz/clanky/clojure-aneb-jazyk-umoznujici-tvorbu-bezpecnych-vicevlaknovych-aplikaci-pro-jvm-2-cast/">http://www.root.cz/clanky/clojure-aneb-jazyk-umoznujici-tvorbu-bezpecnych-vicevlaknovych-aplikaci-pro-jvm-2-cast/</a>
+</li>
+
+<li>Clojure  3: Funkcionální programování<br />
+<a href="http://www.root.cz/clanky/clojure-aneb-jazyk-umoznujici-tvorbu-bezpecnych-vicevlaknovych-aplikaci-pro-jvm-3-cast-funkcionalni-programovani/">http://www.root.cz/clanky/clojure-aneb-jazyk-umoznujici-tvorbu-bezpecnych-vicevlaknovych-aplikaci-pro-jvm-3-cast-funkcionalni-programovani/</a>
+</li>
+
+<li>Clojure  4: Kolekce, sekvence a lazy sekvence<br />
+<a href="http://www.root.cz/clanky/clojure-aneb-jazyk-umoznujici-tvorbu-bezpecnych-vicevlaknovych-aplikaci-pro-jvm-4-cast-kolekce-sekvence-a-lazy-sekvence/">http://www.root.cz/clanky/clojure-aneb-jazyk-umoznujici-tvorbu-bezpecnych-vicevlaknovych-aplikaci-pro-jvm-4-cast-kolekce-sekvence-a-lazy-sekvence/</a>
+</li>
+
+<li>Clojure  5: Sekvence, lazy sekvence a paralelní programy<br />
+<a href="http://www.root.cz/clanky/clojure-a-bezpecne-aplikace-pro-jvm-sekvence-lazy-sekvence-a-paralelni-programy/">http://www.root.cz/clanky/clojure-a-bezpecne-aplikace-pro-jvm-sekvence-lazy-sekvence-a-paralelni-programy/</a>
+</li>
+
+<li>Clojure  6: Podpora pro paralelní programování<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-6-futures-nejsou-jen-financni-derivaty/">http://www.root.cz/clanky/programovaci-jazyk-clojure-6-futures-nejsou-jen-financni-derivaty/</a>
+</li>
+
+<li>Clojure  7: Další funkce pro paralelní programování<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-7-dalsi-podpurne-prostredky-pro-paralelni-programovani/">http://www.root.cz/clanky/programovaci-jazyk-clojure-7-dalsi-podpurne-prostredky-pro-paralelni-programovani/</a>
+</li>
+
+<li>Clojure  8: Identity, stavy, neměnné hodnoty a reference<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-8-identity-stavy-nemenne-hodnoty-a-referencni-typy/">http://www.root.cz/clanky/programovaci-jazyk-clojure-8-identity-stavy-nemenne-hodnoty-a-referencni-typy/</a>
+</li>
+
+<li>Clojure  9: Validátory, pozorovatelé a kooperace s Javou<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-9-validatory-pozorovatele-a-kooperace-mezi-clojure-a-javou/">http://www.root.cz/clanky/programovaci-jazyk-clojure-9-validatory-pozorovatele-a-kooperace-mezi-clojure-a-javou/</a>
+</li>
+
+<li>Clojure 10: Kooperace mezi Clojure a Javou<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-10-kooperace-mezi-clojure-a-javou-pokracovani/">http://www.root.cz/clanky/programovaci-jazyk-clojure-10-kooperace-mezi-clojure-a-javou-pokracovani/</a>
+</li>
+
+<li>Clojure 11: Generátorová notace seznamu/list comprehension<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-11-generatorova-notace-seznamu-list-comprehension/">http://www.root.cz/clanky/programovaci-jazyk-clojure-11-generatorova-notace-seznamu-list-comprehension/</a>
+</li>
+
+<li>Clojure 12: Překlad programů z Clojure do bajtkódu JVM I:<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-12-preklad-programu-z-clojure-do-bajtkodu-jvm/">http://www.root.cz/clanky/programovaci-jazyk-clojure-12-preklad-programu-z-clojure-do-bajtkodu-jvm/</a>
+</li>
+
+<li>Clojure 13: Překlad programů z Clojure do bajtkódu JVM II:<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-13-preklad-programu-z-clojure-do-bajtkodu-jvm-pokracovani/">http://www.root.cz/clanky/programovaci-jazyk-clojure-13-preklad-programu-z-clojure-do-bajtkodu-jvm-pokracovani/</a>
+</li>
+
+<li>Clojure 14: Základy práce se systémem maker<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-14-zaklady-prace-se-systemem-maker/">http://www.root.cz/clanky/programovaci-jazyk-clojure-14-zaklady-prace-se-systemem-maker/</a>
+</li>
+
+<li>Clojure 15: Tvorba uživatelských maker<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-15-tvorba-uzivatelskych-maker/">http://www.root.cz/clanky/programovaci-jazyk-clojure-15-tvorba-uzivatelskych-maker/</a>
+</li>
+
+<li>Clojure 16: Složitější uživatelská makra<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-16-slozitejsi-uzivatelska-makra/">http://www.root.cz/clanky/programovaci-jazyk-clojure-16-slozitejsi-uzivatelska-makra/</a>
+</li>
+
+<li>Clojure 17: Využití standardních maker v praxi<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-17-vyuziti-standardnich-maker-v-praxi/">http://www.root.cz/clanky/programovaci-jazyk-clojure-17-vyuziti-standardnich-maker-v-praxi/</a>
+</li>
+
+<li>Clojure 18: Základní techniky optimalizace aplikací<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-18-zakladni-techniky-optimalizace-aplikaci/">http://www.root.cz/clanky/programovaci-jazyk-clojure-18-zakladni-techniky-optimalizace-aplikaci/</a>
+</li>
+
+<li>Clojure 19: Vývojová prostředí pro Clojure<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-19-vyvojova-prostredi-pro-clojure/">http://www.root.cz/clanky/programovaci-jazyk-clojure-19-vyvojova-prostredi-pro-clojure/</a>
+</li>
+
+<li>Clojure 20: Vývojová prostředí pro Clojure (Vimu s REPL)<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-20-vyvojova-prostredi-pro-clojure-integrace-vimu-s-repl/">http://www.root.cz/clanky/programovaci-jazyk-clojure-20-vyvojova-prostredi-pro-clojure-integrace-vimu-s-repl/</a>
+</li>
+
+<li>Clojure 21: ClojureScript aneb překlad Clojure do JS<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-21-clojurescript-aneb-preklad-clojure-do-javascriptu/">http://www.root.cz/clanky/programovaci-jazyk-clojure-21-clojurescript-aneb-preklad-clojure-do-javascriptu/</a>
+</li>
+
+<li>Leiningen: nástroj pro správu projektů napsaných v Clojure<br />
+<a href="http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure/">http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure/</a>
+</li>
+
+<li>Leiningen: nástroj pro správu projektů napsaných v Clojure (2)<br />
+<a href="http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-2/">http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-2/</a>
+</li>
+
+<li>Leiningen: nástroj pro správu projektů napsaných v Clojure (3)<br />
+<a href="http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-3/">http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-3/</a>
+</li>
+
+<li>Leiningen: nástroj pro správu projektů napsaných v Clojure (4)<br />
+<a href="http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-4/">http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-4/</a>
+</li>
+
+<li>Leiningen: nástroj pro správu projektů napsaných v Clojure (5)<br />
+<a href="http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-5/">http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-5/</a>
+</li>
+
+<li>Leiningen: nástroj pro správu projektů napsaných v Clojure (6)<br />
+<a href="http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-6/">http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-6/</a>
+</li>
+
+<li>Programovací jazyk Clojure a databáze (1.část)<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-a-databaze-1-cast/">http://www.root.cz/clanky/programovaci-jazyk-clojure-a-databaze-1-cast/</a>
+</li>
+
+<li>Pluginy pro Leiningen<br />
+<a href="http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-pluginy-pro-leiningen/">http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-pluginy-pro-leiningen/</a>
+</li>
+
+<li>Programovací jazyk Clojure a knihovny pro práci s vektory a maticemi<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-a-knihovny-pro-praci-s-vektory-a-maticemi/">http://www.root.cz/clanky/programovaci-jazyk-clojure-a-knihovny-pro-praci-s-vektory-a-maticemi/</a>
+</li>
+
+<li>Programovací jazyk Clojure a knihovny pro práci s vektory a maticemi (2)<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-a-knihovny-pro-praci-s-vektory-a-maticemi-2/">http://www.root.cz/clanky/programovaci-jazyk-clojure-a-knihovny-pro-praci-s-vektory-a-maticemi-2/</a>
+</li>
+
+<li>Programovací jazyk Clojure: syntéza procedurálních textur s využitím knihovny Clisk<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-synteza-proceduralnich-textur-s-vyuzitim-knihovny-clisk/">http://www.root.cz/clanky/programovaci-jazyk-clojure-synteza-proceduralnich-textur-s-vyuzitim-knihovny-clisk/</a>
+</li>
+
+<li>Programovací jazyk Clojure: syntéza procedurálních textur s využitím knihovny Clisk (2)<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-synteza-proceduralnich-textur-s-vyuzitim-knihovny-clisk-2/">http://www.root.cz/clanky/programovaci-jazyk-clojure-synteza-proceduralnich-textur-s-vyuzitim-knihovny-clisk-2/</a>
+</li>
+
+<li>Seesaw: knihovna pro snadnou tvorbu GUI v jazyce Clojure<br />
+<a href="http://www.root.cz/clanky/seesaw-knihovna-pro-snadnou-tvorbu-gui-v-jazyce-clojure/">http://www.root.cz/clanky/seesaw-knihovna-pro-snadnou-tvorbu-gui-v-jazyce-clojure/</a>
+</li>
+
+<li>Seesaw: knihovna pro snadnou tvorbu GUI v jazyce Clojure (2)<br />
+<a href="http://www.root.cz/clanky/seesaw-knihovna-pro-snadnou-tvorbu-gui-v-jazyce-clojure-2/">http://www.root.cz/clanky/seesaw-knihovna-pro-snadnou-tvorbu-gui-v-jazyce-clojure-2/</a>
+</li>
+
+<li>Seesaw: knihovna pro snadnou tvorbu GUI v jazyce Clojure (3)<br />
+<a href="http://www.root.cz/clanky/seesaw-knihovna-pro-snadnou-tvorbu-gui-v-jazyce-clojure-3/">http://www.root.cz/clanky/seesaw-knihovna-pro-snadnou-tvorbu-gui-v-jazyce-clojure-3/</a>
+</li>
+
+<li>Programovací jazyk Clojure a práce s Gitem<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-a-prace-s-gitem/">http://www.root.cz/clanky/programovaci-jazyk-clojure-a-prace-s-gitem/</a>
+</li>
+
+<li>Programovací jazyk Clojure: syntéza procedurálních textur s využitím knihovny Clisk (dokončení)<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-synteza-proceduralnich-textur-s-vyuzitim-knihovny-clisk-dokonceni/">http://www.root.cz/clanky/programovaci-jazyk-clojure-synteza-proceduralnich-textur-s-vyuzitim-knihovny-clisk-dokonceni/</a>
+</li>
+
+<li>Pixie: lehký skriptovací jazyk s „kouzelnými“ schopnostmi<br />
+<a href="https://www.root.cz/clanky/pixie-lehky-skriptovaci-jazyk-s-kouzelnymi-schopnostmi/">https://www.root.cz/clanky/pixie-lehky-skriptovaci-jazyk-s-kouzelnymi-schopnostmi/</a>
+</li>
+
+<li>Programovací jazyk Pixie: funkce ze základní knihovny a použití FFI<br />
+<a href="https://www.root.cz/clanky/programovaci-jazyk-pixie-funkce-ze-zakladni-knihovny-a-pouziti-ffi/">https://www.root.cz/clanky/programovaci-jazyk-pixie-funkce-ze-zakladni-knihovny-a-pouziti-ffi/</a>
+</li>
+
+<li>Novinky v Clojure verze 1.9.0<br />
+<a href="https://www.root.cz/clanky/novinky-v-clojure-verze-1-9-0/">https://www.root.cz/clanky/novinky-v-clojure-verze-1-9-0/</a>
+</li>
+
+<li>Validace dat s&nbsp;využitím knihovny spec v&nbsp;Clojure 1.9.0<br />
+<a href="https://www.root.cz/clanky/validace-dat-s-vyuzitim-knihovny-spec-v-clojure-1-9-0/">https://www.root.cz/clanky/validace-dat-s-vyuzitim-knihovny-spec-v-clojure-1-9-0/</a>
+</li>
+
+<li>Použití jazyka Gherkin při tvorbě testovacích scénářů pro aplikace psané v Clojure<br />
+<a href="https://www.root.cz/clanky/pouziti-jazyka-gherkin-pri-tvorbe-testovacich-scenaru-pro-aplikace-psane-v-nbsp-clojure/">https://www.root.cz/clanky/pouziti-jazyka-gherkin-pri-tvorbe-testovacich-scenaru-pro-aplikace-psane-v-nbsp-clojure/</a>
+</li>
+
+<li>Použití jazyka Gherkin při tvorbě testovacích scénářů pro aplikace psané v Clojure (2)<br />
+<a href="https://www.root.cz/clanky/pouziti-jazyka-gherkin-pri-tvorbe-testovacich-scenaru-pro-aplikace-psane-v-nbsp-clojure-2/">https://www.root.cz/clanky/pouziti-jazyka-gherkin-pri-tvorbe-testovacich-scenaru-pro-aplikace-psane-v-nbsp-clojure-2/</a>
+</li>
+
+</ol>
+
+
+
+<p><a name="k20"></a></p>
+<h2 id="k20">20. Odkazy na Internetu</h2>
+
+<ol>
+
+<li>Incanter is a Clojure-based, R-like platform for statistical computing and graphics.<br />
+<a href="http://incanter.org/">http://incanter.org/</a>
+</li>
+
+<li>Evolution of incanter (Gource Visualization)<br />
+<a href="https://www.youtube.com/watch?v=TVfL5nPELr4">https://www.youtube.com/watch?v=TVfL5nPELr4</a>
+</li>
+
+<li>Questions tagged [incanter] (na Stack Overflow)<br />
+<a href="https://stackoverflow.com/questions/tagged/incanter?sort=active">https://stackoverflow.com/questions/tagged/incanter?sort=active</a>
+</li>
+
+<li>Data Sorcery with Clojure<br />
+<a href="https://data-sorcery.org/contents/">https://data-sorcery.org/contents/</a>
+</li>
+
+<li>Back to the Future: Lisp as a Base for a Statistical Computing System<br />
+<a href="https://rd.springer.com/chapter/10.1007/978-3-7908-2084-3_2">https://rd.springer.com/chapter/10.1007/978-3-7908-2084-3_2</a>
+</li>
+
+<li>Incanter Cheat Sheet<br />
+<a href="http://incanter.org/docs/incanter-cheat-sheet.pdf">http://incanter.org/docs/incanter-cheat-sheet.pdf</a>
+</li>
+
+<li>Back to the Future: Lisp as a Base for a Statistical Computing System (celá verze článku)<br />
+<a href="https://www.researchgate.net/publication/227019917_Back_to_the_Future_Lisp_as_a_Base_for_a_Statistical_Computing_System">https://www.researchgate.net/publication/227019917_Back_to_the_Future_Lisp_as_a_Base_for_a_Statistical_Computing_System</a>
+</li>
+
+<li>Lisp-Stat Information<br />
+<a href="http://homepage.cs.uiowa.edu/~luke/xls/xlsinfo/">http://homepage.cs.uiowa.edu/~luke/xls/xlsinfo/</a>
+</li>
+
+<li>Sample Plots in Incanter<br />
+<a href="https://github.com/incanter/incanter/wiki/Sample-Plots-in-Incanter#line">https://github.com/incanter/incanter/wiki/Sample-Plots-in-Incanter#line</a>
+</li>
+
+<li>vectorz-clj<br />
+<a href="https://github.com/mikera/vectorz-clj">https://github.com/mikera/vectorz-clj</a>
+</li>
+
+<li>vectorz - Examples<br />
+<a href="https://github.com/mikera/vectorz-clj/wiki/Examples">https://github.com/mikera/vectorz-clj/wiki/Examples</a>
+</li>
+
+<li>Array Programming<br />
+<a href="https://en.wikipedia.org/wiki/Array_programming">https://en.wikipedia.org/wiki/Array_programming</a>
+</li>
+
+<li>Discovering Array Languages<br />
+<a href="http://archive.vector.org.uk/art10008110">http://archive.vector.org.uk/art10008110</a>
+</li>
+
+<li>no stinking loops -- Kalothi<br />
+<a href="http://www.nsl.com/">http://www.nsl.com/</a>
+</li>
+
+<li>Vector (obsahuje odkazy na články, knihy a blogy o programovacích jazycích APL, J a K)<br />
+<a href="http://www.vector.org.uk/">http://www.vector.org.uk/</a>
+</li>
+
+<li>Colt<br />
+<a href="http://dst.lbl.gov/ACSSoftware/colt/">http://dst.lbl.gov/ACSSoftware/colt/</a>
+</li>
+
+<li>Parallel Colt: Open Source Libraries for High Performance Scientific and Technical Computing in Java<br />
+<a href="http://incanter.org/docs/parallelcolt/api/">http://incanter.org/docs/parallelcolt/api/</a>
+</li>
+
+<li>Processing<br />
+<a href="https://www.processing.org/">https://www.processing.org/</a>
+</li>
+
+<li>The R Project for Statistical Computing<br />
+<a href="https://www.r-project.org/">https://www.r-project.org/</a>
+</li>
+
+<li>Humane test output for clojure.test<br />
+<a href="https://github.com/pjstadig/humane-test-output">https://github.com/pjstadig/humane-test-output</a>
+</li>
+
+<li>iota<br />
+<a href="https://github.com/juxt/iota">https://github.com/juxt/iota</a>
+</li>
+
+<li>5 Differences between clojure.spec and Schema<br />
+<a href="https://lispcast.com/clojure.spec-vs-schema/">https://lispcast.com/clojure.spec-vs-schema/</a>
+</li>
+
+<li>Schema: Clojure(Script) library for declarative data description and validation<br />
+<a href="https://github.com/plumatic/schema">https://github.com/plumatic/schema</a>
+</li>
+
+<li>Zip archiv s&nbsp;Clojure 1.9.0<br />
+<a href="http://repo1.maven.org/maven2/org/clojure/clojure/1.9.0/clojure-1.9.0.zip">http://repo1.maven.org/maven2/org/clojure/clojure/1.9.0/clojure-1.9.0.zip</a>
+</li>
+
+<li>Clojure 1.9 is now available<br />
+<a href="https://clojure.org/news/2017/12/08/clojure19">https://clojure.org/news/2017/12/08/clojure19</a>
+</li>
+
+<li>Deps and CLI Guide<br />
+<a href="https://clojure.org/guides/deps_and_cli">https://clojure.org/guides/deps_and_cli</a>
+</li>
+
+<li>Changes to Clojure in Version 1.9<br />
+<a href="https://github.com/clojure/clojure/blob/master/changes.md">https://github.com/clojure/clojure/blob/master/changes.md</a>
+</li>
+
+<li>clojure.spec - Rationale and Overview<br />
+<a href="https://clojure.org/about/spec">https://clojure.org/about/spec</a>
+</li>
+
+<li>Zip archiv s&nbsp;Clojure 1.8.0<br />
+<a href="http://repo1.maven.org/maven2/org/clojure/clojure/1.8.0/clojure-1.8.0.zip">http://repo1.maven.org/maven2/org/clojure/clojure/1.8.0/clojure-1.8.0.zip</a>
+</li>
+
+<li>Clojure 1.8 is now available<br />
+<a href="http://clojure.org/news/2016/01/19/clojure18">http://clojure.org/news/2016/01/19/clojure18</a>
+</li>
+
+<li>Socket Server REPL<br />
+<a href="http://dev.clojure.org/display/design/Socket+Server+REPL">http://dev.clojure.org/display/design/Socket+Server+REPL</a>
+</li>
+
+<li>CLJ-1671: Clojure socket server<br />
+<a href="http://dev.clojure.org/jira/browse/CLJ-1671">http://dev.clojure.org/jira/browse/CLJ-1671</a>
+</li>
+
+<li>CLJ-1449: Add clojure.string functions for portability to ClojureScript<br />
+<a href="http://dev.clojure.org/jira/browse/CLJ-1449">http://dev.clojure.org/jira/browse/CLJ-1449</a>
+</li>
+
+<li>Launching a Socket Server<br />
+<a href="http://clojure.org/reference/repl_and_main#_launching_a_socket_server">http://clojure.org/reference/repl_and_main#_launching_a_socket_server</a>
+</li>
+
+<li>API for clojure.string<br />
+<a href="http://clojure.github.io/clojure/branch-master/clojure.string-api.html">http://clojure.github.io/clojure/branch-master/clojure.string-api.html</a>
+</li>
+
+<li>Clojars:<br />
+<a href="https://clojars.org/">https://clojars.org/</a>
+</li>
+
+<li>Seznam knihoven na Clojars:<br />
+<a href="https://clojars.org/projects">https://clojars.org/projects</a>
+</li>
+
+<li>Clojure Cookbook: Templating HTML with Enlive<br />
+<a href="https://github.com/clojure-cookbook/clojure-cookbook/blob/master/07_webapps/7-11_enlive.asciidoc">https://github.com/clojure-cookbook/clojure-cookbook/blob/master/07_webapps/7-11_enlive.asciidoc</a>
+</li>
+
+<li>An Introduction to Enlive<br />
+<a href="https://github.com/swannodette/enlive-tutorial/">https://github.com/swannodette/enlive-tutorial/</a>
+</li>
+
+<li>Enlive na GitHubu<br />
+<a href="https://github.com/cgrand/enlive">https://github.com/cgrand/enlive</a>
+</li>
+
+<li>Expectations: příklady atd.<br />
+<a href="http://jayfields.com/expectations/">http://jayfields.com/expectations/</a>
+</li>
+
+<li>Expectations na GitHubu<br />
+<a href="https://github.com/jaycfields/expectations">https://github.com/jaycfields/expectations</a>
+</li>
+
+<li>Lein-expectations na GitHubu<br />
+<a href="https://github.com/gar3thjon3s/lein-expectations">https://github.com/gar3thjon3s/lein-expectations</a>
+</li>
+
+<li>Testing Clojure With Expectations<br />
+<a href="https://semaphoreci.com/blog/2014/09/23/testing-clojure-with-expectations.html">https://semaphoreci.com/blog/2014/09/23/testing-clojure-with-expectations.html</a>
+</li>
+
+<li>Clojure testing TDD/BDD libraries: clojure.test vs Midje vs Expectations vs Speclj<br />
+<a href="https://www.reddit.com/r/Clojure/comments/1viilt/clojure_testing_tddbdd_libraries_clojuretest_vs/">https://www.reddit.com/r/Clojure/comments/1viilt/clojure_testing_tddbdd_libraries_clojuretest_vs/</a>
+</li>
+
+<li>Testing: One assertion per test<br />
+<a href="http://blog.jayfields.com/2007/06/testing-one-assertion-per-test.html">http://blog.jayfields.com/2007/06/testing-one-assertion-per-test.html</a>
+</li>
+
+<li>Rewriting Your Test Suite in Clojure in 24 hours<br />
+<a href="http://blog.circleci.com/rewriting-your-test-suite-in-clojure-in-24-hours/">http://blog.circleci.com/rewriting-your-test-suite-in-clojure-in-24-hours/</a>
+</li>
+
+<li>Clojure doc: zipper<br />
+<a href="http://clojuredocs.org/clojure.zip/zipper">http://clojuredocs.org/clojure.zip/zipper</a>
+</li>
+
+<li>Clojure doc: parse<br />
+<a href="http://clojuredocs.org/clojure.xml/parse">http://clojuredocs.org/clojure.xml/parse</a>
+</li>
+
+<li>Clojure doc: xml-zip<br />
+<a href="http://clojuredocs.org/clojure.zip/xml-zip">http://clojuredocs.org/clojure.zip/xml-zip</a>
+</li>
+
+<li>Clojure doc: xml-seq<br />
+<a href="http://clojuredocs.org/clojure.core/xml-seq">http://clojuredocs.org/clojure.core/xml-seq</a>
+</li>
+
+<li>Parsing XML in Clojure<br />
+<a href="https://github.com/clojuredocs/guides">https://github.com/clojuredocs/guides</a>
+</li>
+
+<li>Clojure Zipper Over Nested Vector<br />
+<a href="https://vitalyper.wordpress.com/2010/11/23/clojure-zipper-over-nested-vector/">https://vitalyper.wordpress.com/2010/11/23/clojure-zipper-over-nested-vector/</a>
+</li>
+
+<li>Understanding Clojure's PersistentVector implementation<br />
+<a href="http://blog.higher-order.net/2009/02/01/understanding-clojures-persistentvector-implementation">http://blog.higher-order.net/2009/02/01/understanding-clojures-persistentvector-implementation</a>
+</li>
+
+<li>Understanding Clojure's PersistentHashMap (deftwice...)<br />
+<a href="http://blog.higher-order.net/2009/09/08/understanding-clojures-persistenthashmap-deftwice.html">http://blog.higher-order.net/2009/09/08/understanding-clojures-persistenthashmap-deftwice.html</a>
+</li>
+
+<li>Assoc and Clojure's PersistentHashMap: part ii<br />
+<a href="http://blog.higher-order.net/2010/08/16/assoc-and-clojures-persistenthashmap-part-ii.html">http://blog.higher-order.net/2010/08/16/assoc-and-clojures-persistenthashmap-part-ii.html</a>
+</li>
+
+<li>Ideal Hashtrees (paper)<br />
+<a href="http://lampwww.epfl.ch/papers/idealhashtrees.pdf">http://lampwww.epfl.ch/papers/idealhashtrees.pdf</a>
+</li>
+
+<li>Clojure home page<br />
+<a href="http://clojure.org/">http://clojure.org/</a>
+</li>
+
+<li>Clojure (downloads)<br />
+<a href="http://clojure.org/downloads">http://clojure.org/downloads</a>
+</li>
+
+<li>Clojure Sequences<br />
+<a href="http://clojure.org/sequences">http://clojure.org/sequences</a>
+</li>
+
+<li>Clojure Data Structures<br />
+<a href="http://clojure.org/data_structures">http://clojure.org/data_structures</a>
+</li>
+
+<li>The Structure and Interpretation of Computer Programs: 2.2.1  Representing Sequences<br />
+<a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-15.html#%_sec_2.2.1">http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-15.html#%_sec_2.2.1</a>
+</li>
+
+<li>The Structure and Interpretation of Computer Programs: 3.3.1  Mutable List Structure<br />
+<a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3.1">http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3.1</a>
+</li>
+
+<li>Clojure - Functional Programming for the JVM<br />
+<a href="http://java.ociweb.com/mark/clojure/article.html">http://java.ociweb.com/mark/clojure/article.html</a>
+</li>
+
+<li>Clojure quick reference<br />
+<a href="http://faustus.webatu.com/clj-quick-ref.html">http://faustus.webatu.com/clj-quick-ref.html</a>
+</li>
+
+<li>4Clojure<br />
+<a href="http://www.4clojure.com/">http://www.4clojure.com/</a>
+</li>
+
+<li>ClojureDoc (rozcestník s&nbsp;dokumentací jazyka Clojure)<br />
+<a href="http://clojuredocs.org/">http://clojuredocs.org/</a>
+</li>
+
+<li>Clojure (na Wikipedia EN)<br />
+<a href="http://en.wikipedia.org/wiki/Clojure">http://en.wikipedia.org/wiki/Clojure</a>
+</li>
+
+<li>Clojure (na Wikipedia CS)<br />
+<a href="http://cs.wikipedia.org/wiki/Clojure">http://cs.wikipedia.org/wiki/Clojure</a>
+</li>
+
+<li>SICP (The Structure and Interpretation of Computer Programs)<br />
+<a href="http://mitpress.mit.edu/sicp/">http://mitpress.mit.edu/sicp/</a>
+</li>
+
+<li>Pure function<br />
+<a href="http://en.wikipedia.org/wiki/Pure_function">http://en.wikipedia.org/wiki/Pure_function</a>
+</li>
+
+<li>Funkcionální programování<br />
+<a href="http://cs.wikipedia.org/wiki/Funkcionální_programování">http://cs.wikipedia.org/wiki/Funkcionální_programování</a>
+</li>
+
+<li>Čistě funkcionální (datové struktury, jazyky, programování)<br />
+<a href="http://cs.wikipedia.org/wiki/Čistě_funkcionální">http://cs.wikipedia.org/wiki/Čistě_funkcionální</a>
+</li>
+
+<li>Clojure Macro Tutorial (Part I, Getting the Compiler to Write Your Code For You)<br />
+<a href="http://www.learningclojure.com/2010/09/clojure-macro-tutorial-part-i-getting.html">http://www.learningclojure.com/2010/09/clojure-macro-tutorial-part-i-getting.html</a>
+</li>
+
+<li>Clojure Macro Tutorial (Part II: The Compiler Strikes Back)<br />
+<a href="http://www.learningclojure.com/2010/09/clojure-macro-tutorial-part-ii-compiler.html">http://www.learningclojure.com/2010/09/clojure-macro-tutorial-part-ii-compiler.html</a>
+</li>
+
+<li>Clojure Macro Tutorial (Part III: Syntax Quote)<br />
+<a href="http://www.learningclojure.com/2010/09/clojure-macro-tutorial-part-ii-syntax.html">http://www.learningclojure.com/2010/09/clojure-macro-tutorial-part-ii-syntax.html</a>
+</li>
+
+<li>Tech behind Tech: Clojure Macros Simplified<br />
+<a href="http://techbehindtech.com/2010/09/28/clojure-macros-simplified/">http://techbehindtech.com/2010/09/28/clojure-macros-simplified/</a>
+</li>
+
+<li>Fatvat - Exploring functional programming: Clojure Macros<br />
+<a href="http://www.fatvat.co.uk/2009/02/clojure-macros.html">http://www.fatvat.co.uk/2009/02/clojure-macros.html</a>
+</li>
+
+<li>Eulerovo číslo<br />
+<a href="http://cs.wikipedia.org/wiki/Eulerovo_číslo">http://cs.wikipedia.org/wiki/Eulerovo_číslo</a>
+</li>
+
+<li>List comprehension<br />
+<a href="http://en.wikipedia.org/wiki/List_comprehension">http://en.wikipedia.org/wiki/List_comprehension</a>
+</li>
+
+<li>List Comprehensions in Clojure<br />
+<a href="http://asymmetrical-view.com/2008/11/18/list-comprehensions-in-clojure.html">http://asymmetrical-view.com/2008/11/18/list-comprehensions-in-clojure.html</a>
+</li>
+
+<li>Clojure Programming Concepts: List Comprehension<br />
+<a href="http://en.wikibooks.org/wiki/Clojure_Programming/Concepts#List_Comprehension">http://en.wikibooks.org/wiki/Clojure_Programming/Concepts#List_Comprehension</a>
+</li>
+
+<li>Clojure core API: for macro<br />
+<a href="http://clojure.github.com/clojure/clojure.core-api.html#clojure.core/for">http://clojure.github.com/clojure/clojure.core-api.html#clojure.core/for</a>
+</li>
+
+<li>cirrus machina - The Clojure for macro<br />
+<a href="http://www.cirrusmachina.com/blog/comment/the-clojure-for-macro/">http://www.cirrusmachina.com/blog/comment/the-clojure-for-macro/</a>
+</li>
+
+<li>Riastradh's Lisp Style Rules<br />
+<a href="http://mumble.net/~campbell/scheme/style.txt">http://mumble.net/~campbell/scheme/style.txt</a>
+</li>
+
+<li>Dynamic Languages Strike Back<br />
+<a href="http://steve-yegge.blogspot.cz/2008/05/dynamic-languages-strike-back.html">http://steve-yegge.blogspot.cz/2008/05/dynamic-languages-strike-back.html</a>
+</li>
+
+<li>Scripting: Higher Level Programming for the 21st Century<br />
+<a href="http://www.tcl.tk/doc/scripting.html">http://www.tcl.tk/doc/scripting.html</a>
+</li>
+
+<li>Java Virtual Machine Support for Non-Java Languages<br />
+<a href="http://docs.oracle.com/javase/7/docs/technotes/guides/vm/multiple-language-support.html">http://docs.oracle.com/javase/7/docs/technotes/guides/vm/multiple-language-support.html</a>
+</li>
+
+<li>Třída java.lang.String<br />
+<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html">http://docs.oracle.com/javase/7/docs/api/java/lang/String.html</a>
+</li>
+
+<li>Třída java.lang.StringBuffer<br />
+<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/StringBuffer.html">http://docs.oracle.com/javase/7/docs/api/java/lang/StringBuffer.html</a>
+</li>
+
+<li>Třída java.lang.StringBuilder<br />
+<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/StringBuilder.html">http://docs.oracle.com/javase/7/docs/api/java/lang/StringBuilder.html</a>
+</li>
+
+<li>StringBuffer versus String<br />
+<a href="http://www.javaworld.com/article/2076072/build-ci-sdlc/stringbuffer-versus-string.html">http://www.javaworld.com/article/2076072/build-ci-sdlc/stringbuffer-versus-string.html</a>
+</li>
+
+<li>Threading macro (dokumentace k&nbsp;jazyku Clojure)<br />
+<a href="https://clojure.github.io/clojure/clojure.core-api.html#clojure.core/-&gt;">https://clojure.github.io/clojure/clojure.core-api.html#clojure.core/-&gt;</a>
+</li>
+
+<li>Understanding the Clojure -&gt; macro<br />
+<a href="http://blog.fogus.me/2009/09/04/understanding-the-clojure-macro/">http://blog.fogus.me/2009/09/04/understanding-the-clojure-macro/</a>
+</li>
+
+<li>clojure.inspector<br />
+<a href="http://clojure.github.io/clojure/clojure.inspector-api.html">http://clojure.github.io/clojure/clojure.inspector-api.html</a>
+</li>
+
+<li>The Clojure Toolbox<br />
+<a href="http://www.clojure-toolbox.com/">http://www.clojure-toolbox.com/</a>
+</li>
+
+<li>Unit Testing in Clojure<br />
+<a href="http://nakkaya.com/2009/11/18/unit-testing-in-clojure/">http://nakkaya.com/2009/11/18/unit-testing-in-clojure/</a>
+</li>
+
+<li>Testing in Clojure (Part-1: Unit testing)<br />
+<a href="http://blog.knoldus.com/2014/03/22/testing-in-clojure-part-1-unit-testing/">http://blog.knoldus.com/2014/03/22/testing-in-clojure-part-1-unit-testing/</a>
+</li>
+
+<li>API for clojure.test - Clojure v1.6 (stable)<br />
+<a href="https://clojure.github.io/clojure/clojure.test-api.html">https://clojure.github.io/clojure/clojure.test-api.html</a>
+</li>
+
+<li>Leiningen: úvodní stránka<br />
+<a href="http://leiningen.org/">http://leiningen.org/</a>
+</li>
+
+<li>Leiningen: Git repository<br />
+<a href="https://github.com/technomancy/leiningen">https://github.com/technomancy/leiningen</a>
+</li>
+
+<li>leiningen-win-installer<br />
+<a href="http://leiningen-win-installer.djpowell.net/">http://leiningen-win-installer.djpowell.net/</a>
+</li>
+
+<li>Clojure.org: Vars and the Global Environment<br />
+<a href="http://clojure.org/Vars">http://clojure.org/Vars</a>
+</li>
+
+<li>Clojure.org: Refs and Transactions<br />
+<a href="http://clojure.org/Refs">http://clojure.org/Refs</a>
+</li>
+
+<li>Clojure.org: Atoms<br />
+<a href="http://clojure.org/Atoms">http://clojure.org/Atoms</a>
+</li>
+
+<li>Clojure.org: Agents as Asynchronous Actions<br />
+<a href="http://clojure.org/agents">http://clojure.org/agents</a>
+</li>
+
+<li>Transient Data Structures
+<a href="http://clojure.org/transients">http://clojure.org/transients</a>
+</li>
+
+<li>Programovací jazyk Clojure a práce s Gitem (2)<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-a-prace-s-gitem-2/">http://www.root.cz/clanky/programovaci-jazyk-clojure-a-prace-s-gitem-2/</a>
+</li>
+
+<li>Programovací jazyk Clojure – triky při práci s řetězci<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-triky-pri-praci-s-retezci/">http://www.root.cz/clanky/programovaci-jazyk-clojure-triky-pri-praci-s-retezci/</a>
+</li>
+
+<li>Programovací jazyk Clojure – triky při práci s kolekcemi<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-triky-pri-praci-s-kolekcemi/">http://www.root.cz/clanky/programovaci-jazyk-clojure-triky-pri-praci-s-kolekcemi/</a>
+</li>
+
+<li>Programovací jazyk Clojure – práce s mapami a množinami<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-prace-s-mapami-a-mnozinami/">http://www.root.cz/clanky/programovaci-jazyk-clojure-prace-s-mapami-a-mnozinami/</a>
+</li>
+
+<li>Programovací jazyk Clojure – základy zpracování XML<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-zaklady-zpracovani-xml/">http://www.root.cz/clanky/programovaci-jazyk-clojure-zaklady-zpracovani-xml/</a>
+</li>
+
+<li>Programovací jazyk Clojure – testování s využitím knihovny Expectations<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-testovani-s-vyuzitim-knihovny-expectations/">http://www.root.cz/clanky/programovaci-jazyk-clojure-testovani-s-vyuzitim-knihovny-expectations/</a>
+</li>
+
+<li>Programovací jazyk Clojure – některé užitečné triky použitelné (nejenom) v&nbsp;testech<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-nektere-uzitecne-triky-pouzitelne-nejenom-v-testech/">http://www.root.cz/clanky/programovaci-jazyk-clojure-nektere-uzitecne-triky-pouzitelne-nejenom-v-testech/</a>
+</li>
+
+<li>Enlive – výkonný šablonovací systém pro jazyk Clojure<br/>
+<a href="http://www.root.cz/clanky/enlive-vykonny-sablonovaci-system-pro-jazyk-clojure/">http://www.root.cz/clanky/enlive-vykonny-sablonovaci-system-pro-jazyk-clojure/</a>
+</li>
+
+<li>Nástroj Leiningen a programovací jazyk Clojure: tvorba vlastních knihoven pro veřejný repositář Clojars<br />
+<a href="http://www.root.cz/clanky/nastroj-leiningen-a-programovaci-jazyk-clojure-tvorba-vlastnich-knihoven-pro-verejny-repositar-clojars/">http://www.root.cz/clanky/nastroj-leiningen-a-programovaci-jazyk-clojure-tvorba-vlastnich-knihoven-pro-verejny-repositar-clojars/</a>
+</li>
+
+<li>Novinky v Clojure verze 1.8.0<br />
+<a href="http://www.root.cz/clanky/novinky-v-clojure-verze-1-8-0/">http://www.root.cz/clanky/novinky-v-clojure-verze-1-8-0/</a>
+</li>
+
+<li>Asynchronní programování v&nbsp;Clojure s&nbsp;využitím knihovny core.async<br />
+<a href="http://www.root.cz/clanky/asynchronni-programovani-v-clojure-s-vyuzitim-knihovny-core-async/">http://www.root.cz/clanky/asynchronni-programovani-v-clojure-s-vyuzitim-knihovny-core-async/</a>
+</li>
+
+<li>Asynchronní programování v&nbsp;Clojure s&nbsp;využitím knihovny core.async (pokračování)<br />
+<a href="http://www.root.cz/clanky/asynchronni-programovani-v-clojure-s-vyuzitim-knihovny-core-async-pokracovani/">http://www.root.cz/clanky/asynchronni-programovani-v-clojure-s-vyuzitim-knihovny-core-async-pokracovani/</a>
+</li>
+
+<li>Asynchronní programování v Clojure s využitím knihovny core.async (dokončení)<br />
+<a href="http://www.root.cz/clanky/asynchronni-programovani-v-clojure-s-vyuzitim-knihovny-core-async-dokonceni/">http://www.root.cz/clanky/asynchronni-programovani-v-clojure-s-vyuzitim-knihovny-core-async-dokonceni/</a>
+</li>
+
+<li>Vytváříme IRC bota v programovacím jazyce Clojure<br />
+<a href="http://www.root.cz/clanky/vytvarime-irc-bota-v-programovacim-jazyce-clojure/">http://www.root.cz/clanky/vytvarime-irc-bota-v-programovacim-jazyce-clojure/</a>
+</li>
+
+<li>Gorilla REPL: interaktivní prostředí pro programovací jazyk Clojure<br />
+<a href="https://www.root.cz/clanky/gorilla-repl-interaktivni-prostredi-pro-programovaci-jazyk-clojure/">https://www.root.cz/clanky/gorilla-repl-interaktivni-prostredi-pro-programovaci-jazyk-clojure/</a>
+</li>
+
+<li>Multimetody v Clojure aneb polymorfismus bez použití OOP<br />
+<a href="https://www.root.cz/clanky/multimetody-v-clojure-aneb-polymorfismus-bez-pouziti-oop/">https://www.root.cz/clanky/multimetody-v-clojure-aneb-polymorfismus-bez-pouziti-oop/</a>
+</li>
+
+<li>Práce s externími Java archivy v programovacím jazyku Clojure<br />
+<a href="https://www.root.cz/clanky/prace-s-externimi-java-archivy-v-programovacim-jazyku-clojure/">https://www.root.cz/clanky/prace-s-externimi-java-archivy-v-programovacim-jazyku-clojure/</a>
+</li>
+
+</ol>
+
+
+
+<p></p><p></p>
+<p><small>Autor: <a href="http://www.fit.vutbr.cz/~tisnovpa">Pavel Tišnovský</a> &nbsp; 2018</small></p>
+</body>
+</html>
+
