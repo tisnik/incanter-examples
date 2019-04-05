@@ -1,0 +1,1982 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+<title>Incanter: operace s maticemi</title>
+<meta name="Author" content="Pavel Tisnovsky" />
+<meta name="Generator" content="vim" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<style type="text/css">
+         body {color:#000000; background:#ffffff;}
+         h1  {font-family: arial, helvetica, sans-serif; color:#ffffff; background-color:#c00000; text-align:center; padding-left:1em}
+         h2  {font-family: arial, helvetica, sans-serif; color:#ffffff; background-color:#0000c0; padding-left:1em; text-align:left}
+         h3  {font-family: arial, helvetica, sans-serif; color:#000000; background-color:#c0c0c0; padding-left:1em; text-align:left}
+         h4  {font-family: arial, helvetica, sans-serif; color:#000000; background-color:#e0e0e0; padding-left:1em; text-align:left}
+         a   {font-family: arial, helvetica, sans-serif;}
+         li  {font-family: arial, helvetica, sans-serif; color:#000000; text-align:justify; width:450px;}
+         ol  {font-family: arial, helvetica, sans-serif; color:#000000; text-align:justify; width:450px;}
+         ul  {font-family: arial, helvetica, sans-serif; color:#000000; text-align:justify; width:450px;}
+         p   {font-family: arial, helvetica, sans-serif; color:#000000; text-align:justify;}
+         pre {background:#e0e0e0}
+</style>
+</head>
+
+<body>
+
+<h1>Incanter: operace s maticemi</h1>
+
+<h3>Pavel Tišnovský</h3>
+
+<p></p>
+
+<h1>Úvodník</h1>
+
+<p>V úvodním článku o projektu Incanter jsme si řekli, že základní datovou strukturou, s níž se pracuje, jsou matice. Projekt Incanter samozřejmě nabízí svým uživatelům prakticky všechny užitečné funkce pro práci s maticemi. Nejdůležitější funkce si dnes popíšeme.</p>
+
+
+
+<h2>Obsah</h2>
+
+<p><a href="#k01">1. Incanter: operace s&nbsp;maticemi</a></p>
+<p><a href="#k02">2. Konstruktory matic</a></p>
+<p><a href="#k03">3. Jednotkové matice</a></p>
+<p><a href="#k04">4. Diagonální matice</a></p>
+<p><a href="#k05">5. Symetrické matice</a></p>
+<p><a href="#k06">6. Operace prováděné nad všemi prvky matic</a></p>
+<p><a href="#k07">7. Broadcasting</a></p>
+<p><a href="#k08">8. Maticové operace: maticový součin, transpozice a stopa</a></p>
+<p><a href="#k09">9. Maticový součin zapsaný infixovým operátorem v&nbsp;makru $=</a></p>
+<p><a href="#k10">10. Výpočet determinantu</a></p>
+<p><a href="#k11">11. Řešení soustavy lineárních rovnic</a></p>
+<p><a href="#k12">12. Výsledky vypočtené ve chvíli, kdy řešení neexistuje nebo je jich nekonečně mnoho</a></p>
+<p><a href="#k13">13. Složitější příklad systému lineárních rovnic</a></p>
+<p><a href="#k14">14. Poslední příklad: řešení tří rovnic o třech neznámých</a></p>
+<p><a href="#k15">15. Rozklad matic: LU rozklad</a></p>
+<p><a href="#k16">16. Rozklad matic: QR rozklad</a></p>
+<p><a href="#k17">17. Choleského dekompozice</a></p>
+<p><a href="#k18">18. Repositář s&nbsp;demonstračními příklady</a></p>
+<p><a href="#k19">19. Předchozí články o programovacím jazyku Clojure a jeho knihovnách</a></p>
+<p><a href="#k20">20. Odkazy na Internetu</a></p>
+
+
+
+<p><a name="k01"></a></p>
+<h2 id="k01">1. Incanter: operace s&nbsp;maticemi</h2>
+
+<p>S&nbsp;tvorbou matic jsme se již ve stručnosti seznámili v&nbsp;úvodním
+článku, takže si na tomto místě pouze připomeňme, že matice jsou základní
+homogenní datovou strukturou, se kterou nástroj Incanter pracuje. Dokonce i
+takzvané <i>datasety</i>, s&nbsp;nimiž se setkáme později, jsou založeny na
+maticích. Vzhledem k&nbsp;tomu, že je projekt Incanter určen především pro
+statistické výpočty, setkáme se v&nbsp;něm především s&nbsp;běžnými
+dvourozměrnými maticemi, taktéž se sloupcovou maticí a samozřejmě i
+s&nbsp;řádkovým vektorem (což je ovšem struktura odlišná od vektoru
+programovacího jazyka Clojure).</p>
+
+
+
+<p><a name="k02"></a></p>
+<h2 id="k02">2. Konstruktory matic</h2>
+
+<p>Připomeňme si, že matici lze vytvořit z&nbsp;běžného vektoru obsahujícího
+jako své prvky další vektory. Kromě vektoru je samozřejmě možné použít
+libovolnou sekvenci podporovanou programovacím jazykem Clojure a převést ji na
+matici konstruktorem <strong>matrix</strong>.</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(doc matrix)</strong>
+-------------------------
+incanter.core/matrix
+([data] [data ncol] [init-val rows cols])
+&nbsp;  
+  Returns a matrix or vector, in a valid core.matrix format. You can use the slices function to
+  access the rows.
+&nbsp;
+  Equivalent to R's matrix function.
+&nbsp;
+  Examples:
+    (def A (matrix [[1 2 3] [4 5 6] [7 8 9]])) <i>; produces a 3x3 matrix</i>
+    (def A2 (matrix [1 2 3 4 5 6 7 8 9] 3)) <i>; produces the same 3x3 matrix</i>
+    (def B (matrix [1 2 3 4 5 6 7 8 9])) <i>; produces a vector with 9 elements</i>
+&nbsp;
+    <i>; since (plus row1 row2) adds the two rows element-by-element</i>
+    (reduce plus A) ; produces the sums of the columns
+&nbsp;
+    <i>; and since (sum row1) sums the elements of the row</i>
+    (map sum A) ; produces the sums of the rows
+</pre>
+
+<p>Přitom víme, že sekvence se tvoří například funkcí <strong>range</strong>,
+ale též funkcí <strong>repeat</strong>:</p>
+
+<pre>
+<strong>(ns matrix-constructors</strong>
+  <strong>(:use (incanter core)))</strong>
+&nbsp;
+&nbsp;
+<i>; matice 3x3 prvky</i>
+<strong>(def M1 (matrix [[1 2 3] [4 5 6] [7 8 9]]))</strong>
+&nbsp;
+<i>; matice s jedním řádkem</i>
+<strong>(def M2 (matrix [1 2 3 4 5 6 7 8 9]))</strong>
+&nbsp;
+<i>; matice s jedním sloupcem</i>
+<strong>(def M3 (matrix [1 2 3 4 5 6 7 8 9] 1))</strong>
+&nbsp;
+<i>; matice 4x4 s nulovými prvky</i>
+<strong>(def M4 (matrix (repeat 16 0) 4))</strong>
+&nbsp;
+<i>; matice 5x5</i>
+<strong>(def M5 (matrix (range 25) 5))</strong>
+&nbsp;
+<i>; matice 5x5 se všemi prvky nastavenými na jedničku</i>
+<strong>(def M6 (matrix (repeat 25 1) 5))</strong>
+</pre>
+
+<p>Jednotlivé matice si můžeme snadno vypsat, a to přímo v&nbsp;interaktivní
+smyčce REPL:</p>
+
+<pre>
+<i>; matice 3x3 prvky</i>
+incanter.irepl=&gt; <strong>(println M1)</strong>
+#vectorz/matrix [[1.0,2.0,3.0],
+[4.0,5.0,6.0],
+[7.0,8.0,9.0]]
+&nbsp;
+<i>; matice s jedním řádkem</i>
+incanter.irepl=&gt; <strong>(println M2)</strong>
+#vectorz/vector [1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0]
+&nbsp;
+<i>; matice s jedním sloupcem</i>
+incanter.irepl=&gt; <strong>(println M3)</strong>
+#vectorz/matrix [[1.0],
+[2.0],
+[3.0],
+[4.0],
+[5.0],
+[6.0],
+[7.0],
+[8.0],
+[9.0]]
+&nbsp;
+<i>; matice 4x4 s nulovými prvky</i>
+incanter.irepl=&gt; <strong>(println M4)</strong>
+#vectorz/matrix [[0.0,0.0,0.0,0.0],
+[0.0,0.0,0.0,0.0],
+[0.0,0.0,0.0,0.0],
+[0.0,0.0,0.0,0.0]]
+&nbsp;
+<i>; matice 5x5</i>
+incanter.irepl=&gt; <strong>(println M5)</strong>
+#vectorz/matrix [[0.0,1.0,2.0,3.0,4.0],
+[5.0,6.0,7.0,8.0,9.0],
+[10.0,11.0,12.0,13.0,14.0],
+[15.0,16.0,17.0,18.0,19.0],
+[20.0,21.0,22.0,23.0,24.0]]
+&nbsp;
+<i>; matice 5x5 se všemi prvky nastavenými na jedničku</i>
+incanter.irepl=&gt; <strong>(println M6)</strong>
+#vectorz/matrix [[1.0,1.0,1.0,1.0,1.0],
+[1.0,1.0,1.0,1.0,1.0],
+[1.0,1.0,1.0,1.0,1.0],
+[1.0,1.0,1.0,1.0,1.0],
+</pre>
+
+<p>Při konstrukci matice z&nbsp;vektoru se samozřejmě provádí kontroly, zda
+rekurzivně zanořené vektory skutečně tvoří obdélníkovou matici. O případných
+problémech vás Incanter ihned informuje:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(def MX (matrix [[1 2 3] [4 5 6] [7 8 9 10]]))</strong>
+&nbsp;
+CompilerException clojure.lang.ExceptionInfo: Can't convert to persistent vector array: inconsistent shape. {}, compiling:(form-init7924884427446760615.clj:1:9) 
+</pre>
+
+<p>Popř.:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(def MY (matrix [[1] 2]))</strong>
+&nbsp;
+CompilerException clojure.lang.ExceptionInfo: Can't convert to persistent vector array: inconsistent shape. {}, compiling:(form-init7924884427446760615.clj:1:9) 
+</pre>
+
+
+
+<p><a name="k03"></a></p>
+<h2 id="k03">3. Jednotkové matice</h2>
+
+<p>V&nbsp;prostředí systému Incanter je možné pracovat i s&nbsp;jednotkovými
+maticemi. Ty jsou vždy čtvercové a kromě hlavní diagonály s&nbsp;hodnotami 1
+obsahují všechny ostatní prvky nulu. Díky této vlastnosti jsou jednotkové
+matice symetrické, ortogonální a samozřejmě i inverzní samy k&nbsp;sobě. Při
+maticovém násobení hrají jednotkové matice úlohu neutrálního jednotkového)
+prvku. Jednotkové matice se vytváří konstruktorem
+<strong>identity-matrix</strong>:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(doc identity-matrix)</strong>
+-------------------------
+incanter.core/identity-matrix
+([n])
+&nbsp;  
+  Returns an n-by-n identity matrix.
+&nbsp;
+  Examples:
+  (identity-matrix 4)
+</pre>
+
+<p>Příklad vytvoření jednotkových matic s&nbsp;různou velikostí:</p>
+
+<pre>
+<strong>(ns matrix-constructors</strong>
+  <strong>(:use (incanter core)))</strong>
+&nbsp;
+&nbsp;
+<i>; jednotkové matice</i>
+<strong>(def I0 (identity-matrix 0))</strong>
+<strong>(def I1 (identity-matrix 1))</strong>
+<strong>(def I2 (identity-matrix 2))</strong>
+<strong>(def I3 (identity-matrix 3))</strong>
+<strong>(def I4 (identity-matrix 4))</strong>
+<strong>(def I5 (identity-matrix 5))</strong>
+</pre>
+
+<p>Výsledné matice vypadají takto (povšimněte si, že není možné vytvořit matici
+velikosti 0):</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(println I0)</strong>
+nil
+&nbsp;
+incanter.irepl=&gt; <strong>(println I1)</strong>
+#vectorz/matrix [[1.0]]
+&nbsp;
+incanter.irepl=&gt; <strong>(println I2)</strong>
+#vectorz/matrix [[1.0,0.0],
+[0.0,1.0]]
+&nbsp;
+incanter.irepl=&gt; <strong>(println I3)</strong>
+#vectorz/matrix [[1.0,0.0,0.0],
+[0.0,1.0,0.0],
+[0.0,0.0,1.0]]
+&nbsp;
+incanter.irepl=&gt; <strong>(println I4)</strong>
+#vectorz/matrix [[1.0,0.0,0.0,0.0],
+[0.0,1.0,0.0,0.0],
+[0.0,0.0,1.0,0.0],
+[0.0,0.0,0.0,1.0]]
+&nbsp;
+incanter.irepl=&gt; <strong>(println I5)</strong>
+#vectorz/matrix [[1.0,0.0,0.0,0.0,0.0],
+[0.0,1.0,0.0,0.0,0.0],
+[0.0,0.0,1.0,0.0,0.0],
+[0.0,0.0,0.0,1.0,0.0],
+[0.0,0.0,0.0,0.0,1.0]]
+</pre>
+
+<p>Velikost jednotkové matice by měla být přirozené číslo, což se
+v&nbsp;konstruktoru kontroluje:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(identity-matrix -1)</strong>
+&nbsp;
+ArrayIndexOutOfBoundsException -1  mikera.matrixx.impl.IdentityMatrix.create (IdentityMatrix.java:33)
+</pre>
+
+<p><div class="rs-tip-major">Poznámka: v&nbsp;nejnovější verzi Incanteru je
+tato funkce označena jako <i>deprecated</i> s&nbsp;tím, že se namísto ní má
+použít funkce se stejným jménem, ovšem ze jmenného prostoru
+<strong>clojure.core.matrix</strong>. Nicméně všechny příklady i testy
+používající původní funkci <strong>identity-matrix</strong> budou stále bez
+problémů pracovat.</div></p>
+
+
+
+<p><a name="k04"></a></p>
+<h2 id="k04">4. Diagonální matice</h2>
+
+<p>Pro konstrukci diagonálních matic slouží konstruktor nazvaný jednoduše
+<strong>diag</strong>. Tomuto konstruktoru se předávají hodnoty prvků
+umístěných na hlavní diagonále, přičemž ostatní prvky zkonstruované matice
+budou mít samozřejmě nulovou hodnotu. Počet prvků na hlavní diagonále přímo
+určuje velikost matice; současně se bude jednat o matici čtvercovou:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(doc diag)</strong>
+-------------------------
+incanter.core/diag
+([m])
+  If given a matrix, diag returns a sequence of its diagonal elements.
+  If given a sequence, it returns a matrix with the sequence's elements
+  on its diagonal. Equivalent to R's diag function.
+&nbsp;
+  Examples:
+  (diag [1 2 3 4]) <i>; produces diagonal matrix</i>
+&nbsp;
+  (def A (matrix [[1 2 3]
+  [4 5 6]
+  [7 8 9]]))
+  (diag A) <i>;; returns elements on main diagonal</i>
+</pre>
+
+<p>Příklad vytvoření tří diagonálních matic o různých rozměrech:</p>
+
+<pre>
+<strong>(ns matrix-constructors</strong>
+  <strong>(:use (incanter core)))</strong>
+&nbsp;
+&nbsp;
+<i>; diagonální matice</i>
+<strong>(def D1 (diag [1 2 3 4]))</strong>
+<strong>(def D2 (diag (range 10)))</strong>
+<strong>(def D3 (diag (repeat 10 1)))</strong>
+</pre>
+
+<p>Výsledky &ndash; zkonstruované matice:</p>
+
+<pre>
+<i>; matice o rozměrech 4&times;4 prvky</i>
+incanter.irepl=&gt; <strong>(println D1)</strong>
+#vectorz/matrix [[1.0,0.0,0.0,0.0],
+[0.0,2.0,0.0,0.0],
+[0.0,0.0,3.0,0.0],
+[0.0,0.0,0.0,4.0]]
+&nbsp;
+<i>; matice o rozměrech 10&times;10 prvků</i>
+incanter.irepl=&gt; <strong>(println D2)</strong>
+#vectorz/matrix [[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],
+[0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],
+[0.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],
+[0.0,0.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,0.0],
+[0.0,0.0,0.0,0.0,4.0,0.0,0.0,0.0,0.0,0.0],
+[0.0,0.0,0.0,0.0,0.0,5.0,0.0,0.0,0.0,0.0],
+[0.0,0.0,0.0,0.0,0.0,0.0,6.0,0.0,0.0,0.0],
+[0.0,0.0,0.0,0.0,0.0,0.0,0.0,7.0,0.0,0.0],
+[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,8.0,0.0],
+[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,9.0]]
+&nbsp;
+<i>; matice o rozměrech 10&times;10 prvků</i>
+incanter.irepl=&gt; <strong>(println D3)</strong>
+#vectorz/matrix [[1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],
+[0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],
+[0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],
+[0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0],
+[0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0],
+[0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0],
+[0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0],
+[0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0],
+[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0],
+[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0]]
+</pre>
+
+<p><div class="rs-tip-major">Poznámka: samozřejmě je jednodušší vytvořit
+poslední matici pomocí příkazu <strong>identity-matrix</strong>, než kombinací
+<strong>diag</strong> a <strong>repeat</strong>. Pokud by však měly mít prvky
+na hlavní diagonále odlišnou hodnotu, může to být výhodné.</div></p>
+
+
+
+<p><a name="k05"></a></p>
+<h2 id="k05">5. Symetrické matice</h2>
+
+<p>Další potenciálně užitečnou funkcí je konstruktor symetrických matic.
+Vzhledem k&nbsp;tomu, že některé prvky symetrických matic mají (již
+z&nbsp;definice) stejné hodnoty, předává se konstruktoru nazvaném
+<strong>symmetric-matrix</strong> menší počet prvků, než odpovídá velikosti
+matice. Konkrétně je nutné zadat pouze prvky ležící v&nbsp;trojúhelníku
+vymezeném hlavní diagonálou. Implicitně se jedná o trojúhelník ležící pod
+diagonálou, ovšem nastavením nepovinného parametru <strong>:lower</strong> na
+hodnotu <strong>false</strong> je možné specifikovat prvky ležící nad hlavní
+diagonálou:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(doc symmetric-matrix)</strong>
+-------------------------
+incanter.core/symmetric-matrix
+([data &amp; {:keys [lower], :or {lower true}}])
+&nbsp;
+  Returns a symmetric matrix from the given data, which represents the lower triangular elements
+  ordered by row. This is not the inverse of half-vectorize which returns a vector of the upper-triangular
+  values, unless the :lower option is set to false.
+&nbsp;
+  Options:
+    :lower (default true) -- lower-triangular. Set :lower to false to reverse the half-vectorize function.
+</pre>
+
+<p>Podívejme se nyní na příklady konstrukce symetrických matic:</p>
+
+<pre>
+<i>; matice 1x1 prvek</i>
+<i>; | 1 |</i>
+incanter.irepl=&gt; <strong>(symmetric-matrix [1])</strong>
+#vectorz/matrix [[1.0]]
+&nbsp;
+<i>; matice 2x2 prvky</i>
+<i>; | 1 . |</i>
+<i>; | 2 3 |</i>
+incanter.irepl=&gt; <strong>(symmetric-matrix [1 2 3])</strong>
+#vectorz/matrix [[1.0,2.0],
+[2.0,3.0]]
+&nbsp;
+<i>; matice 3x3 prvky</i>
+<i>; | 1 . . |</i>
+<i>; | 2 3 . |</i>
+<i>; | 4 5 6 |</i>
+incanter.irepl=&gt; <strong>(symmetric-matrix [1 2 3 4 5 6])</strong>
+#vectorz/matrix [[1.0,2.0,4.0],
+[2.0,3.0,5.0],
+[4.0,5.0,6.0]]
+&nbsp;
+<i>; matice 4x4 prvky</i>
+<i>; | 1 . . .  |</i>
+<i>; | 2 3 . .  |</i>
+<i>; | 4 5 6 .  |</i>
+<i>; | 7 8 9 10 |</i>
+incanter.irepl=&gt; <strong>(symmetric-matrix [1 2 3 4 5 6 7 8 9 10])</strong>
+#vectorz/matrix [[1.0,2.0,4.0,7.0],
+[2.0,3.0,5.0,8.0],
+[4.0,5.0,6.0,9.0],
+[7.0,8.0,9.0,10.0]]
+&nbsp;
+<i>; matice 4x4 prvky</i>
+<i>; | 1 2 3 4  |</i>
+<i>; | . 5 6 7  |</i>
+<i>; | . . 8 9  |</i>
+<i>; | . . . 10 |</i>
+incanter.irepl=&gt; <strong>(symmetric-matrix [1 2 3 4 5 6 7 8 9 10] :lower false)</strong>
+#vectorz/matrix [[1.0,2.0,3.0,4.0],
+[2.0,5.0,6.0,7.0],
+[3.0,6.0,8.0,9.0],
+[4.0,7.0,9.0,10.0]]
+&nbsp;
+<i>; matice 10x10 prvků</i>
+incanter.irepl=&gt; <strong>(symmetric-matrix (range 55))</strong>
+#vectorz/matrix [[0.0,1.0,3.0,6.0,10.0,15.0,21.0,28.0,36.0,45.0],
+[1.0,2.0,4.0,7.0,11.0,16.0,22.0,29.0,37.0,46.0],
+[3.0,4.0,5.0,8.0,12.0,17.0,23.0,30.0,38.0,47.0],
+[6.0,7.0,8.0,9.0,13.0,18.0,24.0,31.0,39.0,48.0],
+[10.0,11.0,12.0,13.0,14.0,19.0,25.0,32.0,40.0,49.0],
+[15.0,16.0,17.0,18.0,19.0,20.0,26.0,33.0,41.0,50.0],
+[21.0,22.0,23.0,24.0,25.0,26.0,27.0,34.0,42.0,51.0],
+[28.0,29.0,30.0,31.0,32.0,33.0,34.0,35.0,43.0,52.0],
+[36.0,37.0,38.0,39.0,40.0,41.0,42.0,43.0,44.0,53.0],
+[45.0,46.0,47.0,48.0,49.0,50.0,51.0,52.0,53.0,54.0]]
+&nbsp;
+<i>; matice 10x10 prvků</i>
+incanter.irepl=&gt; <strong>(symmetric-matrix (range 55) :lower false)</strong>
+#vectorz/matrix [[0.0,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0],
+[1.0,10.0,11.0,12.0,13.0,14.0,15.0,16.0,17.0,18.0],
+[2.0,11.0,19.0,20.0,21.0,22.0,23.0,24.0,25.0,26.0],
+[3.0,12.0,20.0,27.0,28.0,29.0,30.0,31.0,32.0,33.0],
+[4.0,13.0,21.0,28.0,34.0,35.0,36.0,37.0,38.0,39.0],
+[5.0,14.0,22.0,29.0,35.0,40.0,41.0,42.0,43.0,44.0],
+[6.0,15.0,23.0,30.0,36.0,41.0,45.0,46.0,47.0,48.0],
+[7.0,16.0,24.0,31.0,37.0,42.0,46.0,49.0,50.0,51.0],
+[8.0,17.0,25.0,32.0,38.0,43.0,47.0,50.0,52.0,53.0],
+[9.0,18.0,26.0,33.0,39.0,44.0,48.0,51.0,53.0,54.0]]
+</pre>
+
+
+
+<p><a name="k06"></a></p>
+<h2 id="k06">6. Operace prováděné nad všemi prvky matic</h2>
+
+<p>S&nbsp;korespondujícími prvky dvou matic (se stejnými rozměry!) je možné
+provádět různé aritmetické operace, tj.&nbsp;součet, součin, rozdíl i podíl.
+Jedná se o velmi jednoduché a snadno pochopitelné operace, takže se jen
+v&nbsp;rychlosti podívejme na některé příklady:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(println (plus M1 M1))</strong>
+#vectorz/matrix [[2.0,4.0,6.0],
+[8.0,10.0,12.0],
+[14.0,16.0,18.0]]
+&nbsp;
+incanter.irepl=&gt; <strong>(println (mult M1 M1))</strong>
+#vectorz/matrix [[1.0,4.0,9.0],
+[16.0,25.0,36.0],
+[49.0,64.0,81.0]]
+</pre>
+
+<p>Aby byl zápis čitelnější, je výhodnější použít makro $=, s&nbsp;nímž jsme se
+ve stručnosti seznámili minule:</p>
+
+<pre>
+<i>; použití makra $=</i>
+incanter.irepl=&gt; <strong>(println ($= M1 + M1))</strong>
+#vectorz/matrix [[2.0,4.0,6.0],
+[8.0,10.0,12.0],
+[14.0,16.0,18.0]]
+&nbsp;
+<i>; použití makra $=</i>
+incanter.irepl=&gt; <strong>(println ($= M1 + M1 + M1))</strong>
+#vectorz/matrix [[3.0,6.0,9.0],
+[12.0,15.0,18.0],
+[21.0,24.0,27.0]]
+</pre>
+
+<p>Při volání všech operací se provádí kontrola, zda mají obě matice shodné
+rozměry. Pokud tomu tak není, vyhodí se výjimka:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(def M1 (matrix [[1 2 3] [4 5 6] [7 8 9]]))</strong>
+#'incanter.irepl/M1
+incanter.irepl=&gt; <strong>(def M2 (matrix [1 2 3 4 5 6 7 8 9]))</strong>
+#'incanter.irepl/M2
+incanter.irepl=&gt; <strong>(plus M1 M2)</strong>
+&nbsp;
+IllegalArgumentException Can't broadcast Vector with shape [9] to shape: [3,3]  mikera.vectorz.impl.AStridedVector.broadcastLike (AStridedVector.java:150)
+</pre>
+
+<p>Zde se pokoušíme sečíst matice s&nbsp;rozdílnými rozměry:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(def M3 (matrix [1 2 3 4 5 6 7 8 9] 1))</strong>
+#'incanter.irepl/M3
+incanter.irepl=&gt; <strong>(plus M1 M3)</strong>
+&nbsp;
+IndexOutOfBoundsException Mismatched sizes: [3,3] vs. [9,1]  mikera.matrixx.impl.ARectangularMatrix.checkSameShape (ARectangularMatrix.java:82)
+</pre>
+
+<p>Dále je možné aplikovat běžné funkce typu <strong>sin</strong> na všechny
+prvky zdrojové matice. Výsledkem bude nová matice se stejnými rozměry, ovšem
+(pochopitelně) s&nbsp;jinými hodnotami prvků:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(println (abs M4))</strong>
+#vectorz/matrix [[0.0,1.0,2.0,3.0,4.0],
+[5.0,6.0,7.0,8.0,9.0],
+[10.0,11.0,12.0,13.0,14.0],
+[15.0,16.0,17.0,18.0,19.0],
+[20.0,21.0,22.0,23.0,24.0]]
+&nbsp;
+incanter.irepl=&gt; <strong>(println (exp M4))</strong>
+#vectorz/matrix [[1.0,2.718281828459045,7.38905609893065,20.085536923187668,54.598150033144236],
+[148.4131591025766,403.4287934927351,1096.6331584284585,2980.9579870417283,8103.083927575384],
+[22026.465794806718,59874.14171519782,162754.79141900392,442413.3920089205,1202604.2841647768],
+[3269017.3724721107,8886110.520507872,2.41549527535753E7,6.565996913733051E7,1.7848230096318725E8],
+[4.851651954097903E8,1.3188157344832146E9,3.584912846131592E9,9.744803446248903E9,2.648912212984347E10]]
+&nbsp;
+incanter.irepl=&gt; <strong>(println (sqrt M4))</strong>
+#vectorz/matrix [[0.0,1.0,1.4142135623730951,1.7320508075688772,2.0],
+[2.23606797749979,2.449489742783178,2.6457513110645907,2.8284271247461903,3.0],
+[3.1622776601683795,3.3166247903554,3.4641016151377544,3.605551275463989,3.7416573867739413],
+[3.872983346207417,4.0,4.123105625617661,4.242640687119285,4.358898943540674],
+[4.47213595499958,4.58257569495584,4.69041575982343,4.795831523312719,4.898979485566356]]
+&nbsp;
+incanter.irepl=&gt; <strong>(println (sin M4))</strong>
+#vectorz/matrix [[0.0,0.8414709848078965,0.9092974268256817,0.1411200080598672,-0.7568024953079282],
+[-0.9589242746631385,-0.27941549819892586,0.6569865987187891,0.9893582466233818,0.4121184852417566],
+[-0.5440211108893698,-0.9999902065507035,-0.5365729180004349,0.4201670368266409,0.9906073556948704],
+[0.6502878401571168,-0.2879033166650653,-0.9613974918795568,-0.7509872467716762,0.14987720966295234],
+[0.9129452507276277,0.8366556385360561,-0.008851309290403876,-0.8462204041751706,-0.9055783620066238]]
+&nbsp;
+incanter.irepl=&gt; <strong>(println (cos M4))</strong>
+#vectorz/matrix [[1.0,0.5403023058681398&ndash; 0.4161468365471424&ndash; 0.9899924966004454&ndash; 0.6536436208636119],
+[0.28366218546322625,0.9601702866503661,0.7539022543433046&ndash; 0.14550003380861354&ndash; 0.9111302618846769],
+[-0.8390715290764524,0.004425697988050785,0.8438539587324921,0.9074467814501962,0.1367372182078336],
+[-0.7596879128588213&ndash; 0.9576594803233847&ndash; 0.27516333805159693,0.6603167082440802,0.9887046181866692],
+[0.40808206181339196&ndash; 0.5477292602242684&ndash; 0.9999608263946371&ndash; 0.5328330203333975,0.424179007336997]]
+</pre>
+
+<p>Zajímavá je funkce <strong>pow</strong>, které se kromě matice předává i
+příslušná mocnina:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(println (pow M4 2))</strong>
+#vectorz/matrix [[0.0,1.0,4.0,9.0,16.0],
+[25.0,36.0,49.0,64.0,81.0],
+[100.0,121.0,144.0,169.0,196.0],
+[225.0,256.0,289.0,324.0,361.0],
+[400.0,441.0,484.0,529.0,576.0]]
+</pre>
+
+<p><div class="rs-tip-major">Poznámka: kupodivu není možné mocninu určit pro
+každý prvek zvlášť pomocí další matice, ale skutečně se musí jednat o číslo,
+konkrétně o typ <strong>Number</strong>.</div></p>
+
+
+
+<p><a name="k07"></a></p>
+<h2 id="k07">7. Broadcasting</h2>
+
+<p>V&nbsp;projektu Incanter je možné využít i takzvaný <i>broadcasting</i>,
+s&nbsp;nímž jsme se seznámili například při popisu programovacího jazyka Julia.
+V&nbsp;případě vektorů jsou totiž všechny výše uvedené operace deklarovány
+takovým způsobem, že jsou prováděny vždy nad prvky vektorů se shodným indexem a
+pokud je jedním z&nbsp;operandů skalární hodnota a nikoli vektor, je skalár
+převeden na vektor stejné délky jakou má druhý operand. Toto
+&bdquo;rozšíření&ldquo; skalární hodnoty na vektor se nazývá <i>broadcast</i> a
+podobně funguje i &bdquo;rozšíření&ldquo; skalární hodnoty na celou matici
+(libovolných rozměrů). Tato vlastnost je velmi užitečná, jak ostatně můžeme
+vidět z&nbsp;následujících příkladů:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(println (plus M1 10)) </strong>
+#vectorz/matrix [[11.0,12.0,13.0],
+[14.0,15.0,16.0],
+[17.0,18.0,19.0]]
+&nbsp;
+incanter.irepl=&gt; <strong>(println (plus M4 12))</strong>
+#vectorz/matrix [[12.0,13.0,14.0,15.0,16.0],
+[17.0,18.0,19.0,20.0,21.0],
+[22.0,23.0,24.0,25.0,26.0],
+[27.0,28.0,29.0,30.0,31.0],
+[32.0,33.0,34.0,35.0,36.0]]
+&nbsp;
+<i>; inverze všech prvků matice</i>
+incanter.irepl=&gt; <strong>(println (mult M1 -1))</strong>
+#vectorz/matrix [[-1.0,-2.0,-3.0],
+[-4.0,-5.0,-6.0],
+[-7.0,-8.0,-9.0]]
+</pre>
+
+<p>Samozřejmě opět můžeme využít makro $=, a to následujícím způsobem:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(println ($= M1 + 10))</strong>
+#vectorz/matrix [[11.0,12.0,13.0],
+[14.0,15.0,16.0],
+[17.0,18.0,19.0]]
+&nbsp;
+incanter.irepl=&gt; <strong>(println ($= M4 - 12))</strong>
+#vectorz/matrix [[-12.0,-11.0,-10.0,-9.0,-8.0],
+[-7.0,-6.0,-5.0,-4.0,-3.0],
+[-2.0,-1.0,0.0,1.0,2.0],
+[3.0,4.0,5.0,6.0,7.0],
+[8.0,9.0,10.0,11.0,12.0]]
+&nbsp;
+incanter.irepl=&gt; <strong>(println ($= M1 * -1))</strong>
+#vectorz/matrix [[-1.0,-2.0,-3.0],
+[-4.0,-5.0,-6.0],
+[-7.0,-8.0,-9.0]]
+&nbsp;
+incanter.irepl=&gt; <strong>(println ($= M1 * 10 - 100))</strong>
+#vectorz/matrix [[-90.0,-80.0,-70.0],
+[-60.0,-50.0,-40.0],
+[-30.0,-20.0,-10.0]]
+</pre>
+
+<p>Opakem broadcastingu jsou funkce, které z&nbsp;obsahu celé matice vypočtou
+jedinou skalární hodnotu. Jedná se o funkce <strong>sum</strong> (součet všech
+prvků) a <strong>prod</strong> (součin všech prvků):</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(println (sum M1))</strong>
+45.0
+&nbsp;
+incanter.irepl=&gt; <strong>(println (sum M4))</strong>
+300.0
+&nbsp;
+incanter.irepl=&gt; <strong>(println (prod M4))</strong>
+0.0
+&nbsp;
+incanter.irepl=&gt; <strong>(println (prod M1))</strong>
+362880.0
+</pre>
+
+
+
+<p><a name="k08"></a></p>
+<h2 id="k08">8. Maticové operace: maticový součin, transpozice a stopa</h2>
+
+<p>Maticový součin je realizován funkcí <strong>mmult</strong>:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(doc mmult)</strong>
+-------------------------
+incanter.core/mmult
+([&amp; args])
+&nbsp;
+  Returns the matrix resulting from the matrix multiplication of the
+  the given arguments. Equivalent to R's %*% operator.
+&nbsp;
+  Examples:
+&nbsp;
+    (def A (matrix [[1 2 3]
+                    [4 5 6]
+                    [7 8 9]]))
+    (mmult A (trans A))
+    (mmult A (trans A) A)
+</pre>
+
+<p>Pro test, jaké výsledky dostaneme, jsou použity tyto matice:</p>
+
+<pre>
+<i>; matice 3x3 prvky</i>
+(def M1 (matrix [[1 2 3] [4 5 6] [7 8 9]]))
+&nbsp;
+<i>; matice s jedním řádkem</i>
+(def M2 (matrix [1 2 3 4 5 6 7 8 9]))
+&nbsp;
+<i>; matice s jedním sloupcem</i>
+(def M3 (matrix [1 2 3 4 5 6 7 8 9] 1))
+&nbsp;
+<i>; matice 5x5 prvků</i>
+(def M4 (matrix (range 25) 5))
+</pre>
+
+<p>Nyní si již můžeme maticový součin vyzkoušet:</p>
+
+<pre>
+<i>; násobení matic 3x3 prvky</i>
+<i>; výsledkem je matice se shodnými rozměry</i>
+incanter.irepl=&gt; <strong>(println (mmult M1 M1))</strong>
+#vectorz/matrix [[30.0,36.0,42.0],
+[66.0,81.0,96.0],
+[102.0,126.0,150.0]]
+&nbsp;
+<i>; vynásobení matice s jedním řádkem maticí s jedním sloupcem</i>
+<i>; výsledkem je matice s jediným prvkem</i>
+incanter.irepl=&gt; <strong>(println (mmult M2 M3))</strong>
+#vectorz/vector [285.0]
+&nbsp;
+<i>; násobení matic 5x5 prvků</i>
+<i>; výsledkem je matice se shodnými rozměry</i>
+incanter.irepl=&gt; <strong>(println (mmult M4 M4))</strong>
+#vectorz/matrix [[150.0,160.0,170.0,180.0,190.0],
+[400.0,435.0,470.0,505.0,540.0],
+[650.0,710.0,770.0,830.0,890.0],
+[900.0,985.0,1070.0,1155.0,1240.0],
+[1150.0,1260.0,1370.0,1480.0,1590.0]]
+</pre>
+
+<p>Další užitečnou operací je transpozice matice, tj.&nbsp;vzájemná výměna
+sloupců a řádků matice. Tato operace se provádí funkcí
+<strong>trans</strong>:</p>
+
+<pre>
+<i>; transpozice matice 3x3 prvky</i>
+incanter.irepl=&gt; <strong>(println (trans M1))</strong>
+#vectorz/matrix [[1.0,4.0,7.0],
+[2.0,5.0,8.0],
+[3.0,6.0,9.0]]
+&nbsp;
+<i>; transpozice _vektoru_ tvořeného jedním řádkem</i>
+incanter.irepl=&gt; <strong>(println (trans M2))</strong>
+#vectorz/vector [1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0]
+&nbsp;
+<i>; transpozice matice tvořené jedním sloupcem</i>
+<i>; výsledkem je matice s jedním řádkem</i>
+incanter.irepl=&gt; <strong>(println (trans M3))</strong>
+#vectorz/matrix [[1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0]]
+&nbsp;
+<i>; transpozice matice 5x5 prvků</i>
+incanter.irepl=&gt; <strong>(println (trans M4))</strong>
+#vectorz/matrix [[0.0,5.0,10.0,15.0,20.0],
+[1.0,6.0,11.0,16.0,21.0],
+[2.0,7.0,12.0,17.0,22.0],
+[3.0,8.0,13.0,18.0,23.0],
+[4.0,9.0,14.0,19.0,24.0]]
+</pre>
+
+<p>Poslední operací, s&nbsp;níž se seznámíme v&nbsp;této kapitole, je výpočet
+<a href="https://cs.wikipedia.org/wiki/Stopa_(algebra)"><i>stopy</i>
+matice</a>. K&nbsp;tomuto účelu se používá funkce pojmenovaná
+<strong>trace</strong>:</p>
+
+<pre>
+<i>; výpočet stopy matice</i>
+incanter.irepl=&gt; <strong>(println (trace M1))</strong>
+15.0
+&nbsp;
+incanter.irepl=&gt; <strong>(println (trace M2))</strong>
+1.0
+&nbsp;
+incanter.irepl=&gt; <strong>(println (trace M3))</strong>
+1.0
+&nbsp;
+incanter.irepl=&gt; <strong>(println (trace M4))</strong>
+60.0
+</pre>
+
+<p><div class="rs-tip-major">Poznámka: stopa je vypočtena součtem hodnot všech
+prvků na hlavní diagonále matice.</div></p>
+
+
+
+<p><a name="k09"></a></p>
+<h2 id="k09">9. Maticový součin zapsaný infixovým operátorem v&nbsp;makru $=</h2>
+
+<p>Tato kapitola bude velmi stručná, protože si v&nbsp;ní jen ukážeme, jakým
+způsobem se zapisuje násobení matic při použití makra <strong>$=</strong>.
+V&nbsp;tomto případě pochopitelně není možné použít pouze operátor *, protože
+ten znamená součin korespondujících prvků matice. Musíme tedy použít jiný
+operátor, a to konkrétně v&nbsp;tomto tvaru <strong>&lt;*&gt;</strong>.
+Podívejme se nyní na způsob jeho použití:</p>
+
+<pre>
+<i>; násobení matic 3x3 prvky</i>
+<i>; výsledkem je matice se shodnými rozměry</i>
+incanter.irepl=&gt; <strong>(println ($= M1 &lt;*&gt; M1))</strong>
+#vectorz/matrix [[30.0,36.0,42.0],
+[66.0,81.0,96.0],
+[102.0,126.0,150.0]]
+&nbsp;
+<i>; vynásobení matice s jedním řádkem maticí s jedním sloupcem</i>
+<i>; výsledkem je matice s jediným prvkem</i>
+incanter.irepl=&gt; <strong>(println ($= M2 &lt;*&gt; M3))</strong>
+#vectorz/vector [285.0]
+&nbsp;
+<i>; vynásobení matice velikosti 5&times;5 prvků sama sebou</i>
+incanter.irepl=&gt; <strong>(println ($= M4 &lt;*&gt; M4))</strong>
+#vectorz/matrix [[150.0,160.0,170.0,180.0,190.0],
+[400.0,435.0,470.0,505.0,540.0],
+[650.0,710.0,770.0,830.0,890.0],
+[900.0,985.0,1070.0,1155.0,1240.0],
+[1150.0,1260.0,1370.0,1480.0,1590.0]]
+</pre>
+
+<p><div class="rs-tip-major">Poznámka: matice byly definovány v&nbsp;rámci
+předchozí kapitoly.</div></p>
+
+
+
+<p><a name="k10"></a></p>
+<h2 id="k10">10. Výpočet determinantu</h2>
+
+<p>V&nbsp;Incanteru je samozřejmě možné vypočítat i <a
+href="https://en.wikipedia.org/wiki/Determinant">determinant</a>. Pro tento
+účel slouží funkce pojmenovaná jednoduše <strong>det</strong>. Determinant lze
+vypočítat pro jakoukoli čtvercovou matici:</p>
+
+<pre>
+<i>; výpočet determinantu matice</i>
+incanter.irepl=&gt; <strong>(println (det (matrix [[42]])))</strong>
+42.0
+&nbsp;
+incanter.irepl=&gt; <strong>(println (det (matrix [[1 2] [3 4]])))</strong>
+-2.0
+&nbsp;
+incanter.irepl=&gt; <strong>(println (det (matrix [[1 0 0] [0 5 0] [0 0 1]])))</strong>
+5.0
+&nbsp;
+incanter.irepl=&gt; <strong>(println (det (matrix [[0 0 1] [0 5 0] [1 0 1]])))</strong>
+-5.0
+&nbsp;
+incanter.irepl=&gt; <strong>(def M4 (matrix (range 1 26) 5))</strong>
+#'incanter.irepl/M4
+&nbsp;
+incanter.irepl=&gt; <strong>(println (det M4))</strong>
+-0.0
+</pre>
+
+<p><div class="rs-tip-major">Poznámka: povšimněte si, že se při výpočtu někdy
+vrátí záporná nula. To je v&nbsp;pořádku, neboť v&nbsp;normě IEEE 754 se <a
+href="https://www.root.cz/clanky/interni-reprezentace-numerickych-hodnot-od-skutecneho-pocitacoveho-praveku-po-ieee-754-2008-dokonceni#k02">rozlišuje
+znaménko i u nulové hodnoty</a>.</div></p>
+
+<p>V&nbsp;případě, že matice není čtvercová, vypíše Incanter chybu:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(println (det (matrix [[0 0 1 0] [0 5 0 0] [1 0 1 0]])))</strong>
+&nbsp;
+UnsupportedOperationException Matrix should be square but has shape: [3,4]  mikera.matrixx.impl.ARectangularMatrix.checkSquare (ARectangularMatrix.java:75)
+&nbsp;
+&nbsp;
+incanter.irepl=&gt; <strong>(println (det (matrix [[0 0 1] [0 5 0] [1 0 1] [1 1 1]])))</strong>
+&nbsp;
+UnsupportedOperationException Matrix should be square but has shape: [4,3]  mikera.matrixx.impl.ARectangularMatrix.checkSquare (ARectangularMatrix.java:75)
+</pre>
+
+
+
+<p><a name="k11"></a></p>
+<h2 id="k11">11. Řešení soustavy lineárních rovnic</h2>
+
+<p>Výše uvedené operace se prakticky používají například při řešení soustavy
+lineárních rovnic. Tuto operaci ovšem nemusíte ručně programovat, protože ji
+Incanter už má implementovanou. Podívejme se na zdaleka nejjednodušší příklad,
+tj.&nbsp;na řešení jediné rovnice s&nbsp;jedinou neznámou. Rovnice má
+jednoznačné řešení:</p>
+
+<pre>
+7x = 21
+</pre>
+
+<p>Pro vyřešení této rovnice vytvoříme matici s&nbsp;koeficienty z&nbsp;levé
+části rovnice. Rovnice je jediná, takže matice bude mít jeden řádek a obsahuje
+jedinou neznámou, takže bude mít i jeden sloupec:</p>
+
+<pre>
+<i>; matice s koeficienty na levé části rovnice</i>
+<strong>(def A (matrix [[7]]))</strong>
+</pre>
+
+<p>Dále vytvoříme matici (resp.&nbsp;přesněji řečeno řádkový vektor) obsahující
+konstanty na pravých stranách rovnice. Opět platí, že v&nbsp;našem případě máme
+jedinou rovnici a tudíž i matice bude obsahovat jediný prvek:</p>
+
+<pre>
+<i>; matice s výsledky na pravé části rovnice</i>
+<strong>(def B (matrix [21]))</strong>
+</pre>
+
+<p>Vlastní výpočet se provede funkcí <strong>solve</strong>, které se obě
+matice předají:</p>
+
+<pre>
+<i>; výpočet</i>
+<strong>(println (solve A B))</strong>
+#vectorz/vector [3.0]
+</pre>
+
+<p>Vidíme, že výsledkem je vektor obsahující vypočtené hodnoty jednotlivých
+neznámých. V&nbsp;našem případě se opět jedná o jedinou neznámou
+<strong>x</strong>, která byla vypočtena.</p>
+
+<p><div class="rs-tip-major">Poznámka: složitější soustava rovnic a její řešení
+bude popsána ve <a href="#k13">třinácté kapitole</a>.</div></p>
+
+<p><div class="rs-tip-major">Poznámka<sup>2</sup>: pokud funkci
+<strong>solve</strong> předáte jedinou matici, provede se výpočet odpovídající
+inverzní matice, samozřejmě za předpokladu, že taková matice
+existuje:</div></p>
+
+<pre>
+incanter.irepl=&gt; <strong>(println (solve (matrix [[4 3] [3 2]])))</strong>
+#vectorz/matrix [[-2.0,3.0],
+[3.0,-4.0]]
+</pre>
+
+
+
+<p><a name="k12"></a></p>
+<h2 id="k12">12. Výsledky vypočtené ve chvíli, kdy řešení neexistuje nebo je jich nekonečně mnoho</h2>
+
+<p>Zkusme si nyní vypočítat rovnici v&nbsp;případě, že řešení neexistuje:</p>
+
+<pre>
+0x = 1
+</pre>
+
+<p>Celý výpočet:</p>
+
+<pre>
+<i>; matice s koeficienty na levé části rovnice</i>
+<strong>(def A (matrix [[0]]))</strong>
+&nbsp;
+<i>; matice s výsledky na pravé části rovnice</i>
+<strong>(def B (matrix [1]))</strong>
+&nbsp;
+<i>; výpočet</i>
+<strong>(println (solve A B))</strong>
+nil
+</pre>
+
+<p>V&nbsp;tomto případě se vrátila hodnota <strong>nil</strong> značící, že
+<i>jednoznačné řešení</i> neexistuje.</p>
+
+<p>Podobně si můžeme vyzkoušet vyřešit rovnici s&nbsp;nekonečným množstvím
+řešení:</p>
+
+<pre>
+0x = 0
+</pre>
+
+<p>Celý výpočet:</p>
+
+<pre>
+<i>; matice s koeficienty na levé části rovnice</i>
+<strong>(def A (matrix [[0]]))</strong>
+&nbsp;
+<i>; matice s výsledky na pravé části rovnice</i>
+<strong>(def B (matrix [0]))</strong>
+&nbsp;
+<i>; výpočet</i>
+<strong>(println (solve A B))</strong>
+nil
+</pre>
+
+<p>I v&nbsp;tomto případě získáme hodnotu <strong>nil</strong>. Popravdě
+&ndash; toto není úplně nejlepší chování Incanteru, protože nemůžeme snadno
+rozhodnout, jestli má rovnice (systém rovnic) více řešení nebo naopak nemá
+řešení žádné.</p>
+
+
+
+<p><a name="k13"></a></p>
+<h2 id="k13">13. Složitější příklad systému lineárních rovnic</h2>
+
+<p>Zkusme si ukázat nepatrně složitější příklad s&nbsp;dvojicí rovnic o dvou
+neznámých <strong>x</strong> a <strong>y</strong>:</p>
+
+<pre>
+3x + 2y = 8
+ x +  y = 2
+</pre>
+
+<p>Matice A nyní bude velikosti 2&times;2 a bude obsahovat jednotlivé
+koeficienty tak, jak jsou zapsány v&nbsp;rovnících:</p>
+
+<pre>
+<i>; matice s koeficienty na levé části rovnic</i>
+<strong>(def A (matrix [[3 2] [1 1]]))</strong>
+</pre>
+
+<p>Matice B bude obsahovat dva prvky, a to konkrétně hodnoty z&nbsp;pravých
+stran rovnic:</p>
+
+<pre>
+<i>; matice s výsledky na pravé části rovnic</i>
+<strong>(def B (matrix [8 2]))</strong>
+</pre>
+
+<p>Vlastní výpočet:</p>
+
+<pre>
+<strong>(println (solve A B))</strong>
+#vectorz/vector [3.9999999999999996,-1.9999999999999993]
+</pre>
+
+<p>Výsledkem je tedy x=4 a y=-2.</p>
+
+<p>Výsledek je samozřejmě vhodné ověřit, a to vynásobením matice A vektorem
+s&nbsp;výsledky. Měli bychom dostat pravé strany rovnic:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(println (mmult A (solve A B)))</strong>
+#vectorz/vector [8.0,2.0]
+</pre>
+
+<p>Pokud se vám nechce kontrolovat hodnoty, můžete si pravou stranu rovnic od
+kontrolního výpočtu odečíst. Měl by vyjít vektor s&nbsp;nulami:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(println (minus B (mmult A (solve A B))))</strong>
+#vectorz/vector [0.0,0.0]
+</pre>
+
+<p>Jednodušší je ovšem použití threading makra se stejným kontrolním
+výsledkem:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(->> (solve A B) (mmult A) (minus B) println)</strong>
+#vectorz/vector [0.0,0.0]
+</pre>
+
+
+
+<p><a name="k14"></a></p>
+<h2 id="k14">14. Poslední příklad: řešení tří rovnic o třech neznámých</h2>
+
+<p>V&nbsp;posledním příkladu na použití funkce <strong>solve</strong> se
+pokusíme vyřešit tři rovnice o třech neznámých:</p>
+
+<pre>
+4x + 5y - 2z = -14
+7x -  y + 2z = 42
+3x +  y + 4z = 28
+</pre>
+
+<p>Výpočet proběhne naprosto stejným způsobem, jako v&nbsp;předchozích
+příkladech, tedy:</p>
+
+<pre>
+<i>; matice s koeficienty na levé části rovnic</i>
+<strong>(def A (matrix [[4 5 -2] [7 -1 2] [3 1 4]]))</strong>
+&nbsp;
+<i>; matice s výsledky na pravé části rovnic</i>
+<strong>(def B (matrix [-14 42 28]))</strong>
+&nbsp;
+<i>; výpočet koeficientů</i>
+<strong>(println (solve A B))</strong>
+#vectorz/vector [4.0,-4.0,5.0]
+</pre>
+
+<p>Vypočtené výsledky:</p>
+
+<pre>
+x = 4
+y = -4
+z = 5
+</pre>
+
+<p>Kontrola výsledků:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(->> (solve A B) (mmult A) (minus B) println)</strong>
+#vectorz/vector [0.0,0.0,0.0]
+</pre>
+
+<p>Získali jsme vektor obsahující trojici nul, tudíž je výsledek správný
+(samozřejmě za předpokladu, že věříme operacím <strong>mmult</strong> a
+<strong>minus</strong>.</p>
+
+
+
+<p><a name="k15"></a></p>
+<h2 id="k15">15. Rozklad matic: LU rozklad</h2>
+
+<p>V&nbsp;projektu Incanter nalezneme i několik funkcí pro <a
+href="https://en.wikipedia.org/wiki/Matrix_decomposition">rozklad (dekompozici)
+matic</a>. Podporován je především známý LU rozklad, který matici rozdělí na
+dvě matice, jejichž součinem vznikne matice původní:</p>
+
+<pre>
+; matice 3x3 prvky
+<strong>(def M1 (matrix [[1 2 3] [4 5 6] [7 8 9]]))</strong>
+&nbsp;
+; matice 5x5 prvků
+<strong>(def M2 (matrix (range 25) 5))</strong>
+</pre>
+
+<p>LU rozklad těchto dvou matic bude vypadat následovně:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(println (decomp-lu M1))</strong>
+{
+:L #vectorz/matrix [[1.0,0.0,0.0],
+                    [0.14285714285714285,1.0,0.0],
+                    [0.5714285714285714,0.5000000000000002,1.0]],
+:U #vectorz/matrix [[7.0,8.0,9.0],
+                    [0.0,0.8571428571428572,1.7142857142857144],
+                    [0.0,0.0,0.0]],
+:P #vectorz/matrix [[0.0,1.0,0.0],
+                    [0.0,0.0,1.0],
+                    [1.0,0.0,0.0]]}
+&nbsp;
+incanter.irepl=&gt; <strong>(println (decomp-lu M2))</strong>
+{
+:L #vectorz/matrix [[1.0,0.0,0.0,0.0,0.0],
+                    [0.0,1.0,0.0,0.0,0.0],
+                    [0.5,0.5,1.0,0.0,0.0],
+                    [0.75,0.25,0.0,1.0,0.0],
+                    [0.25,0.75,0.0,0.0,1.0]],
+:U #vectorz/matrix [[20.0,21.0,22.0,23.0,24.0],
+                    [0.0,1.0,2.0,3.0,4.0],
+                    [0.0,0.0,0.0,0.0,0.0],
+                    [0.0,0.0,0.0,0.0,0.0],
+                    [0.0,0.0,0.0,0.0,0.0]],
+:P #vectorz/matrix [[0.0,1.0,0.0,0.0,0.0],
+                    [0.0,0.0,0.0,0.0,1.0],
+                    [0.0,0.0,1.0,0.0,0.0],
+                    [0.0,0.0,0.0,1.0,0.0],
+                    [1.0,0.0,0.0,0.0,0.0]]}
+</pre>
+
+<p>Povšimněte si, že výsledkem této funkce je slovník se třemi maticemi:</p>
+
+<ol>
+<li>:L &ndash; dolní trojúhelníková matice s&nbsp;jedničkami na celé hlavní diagonále</li>
+<li>:U &ndash; horní trojúhelníková matice s&nbsp;nenulovými prvky na hlavní diagonále</li>
+<li>:P &ndash; permutační matice, která se vytváří z&nbsp;matice jednotkové permutací sloupců</li>
+</ol>
+
+
+
+<p><a name="k16"></a></p>
+<h2 id="k16">16. Rozklad matic: QR rozklad</h2>
+
+<p>Dalším rozkladem, který je v&nbsp;projektu Incanter podporován, je takzvaný
+QR rozklad, který opět z&nbsp;původní matice vytvoří dvě další matice, přičemž
+matice původní vznikne součinem těchto dvou matic. Jedna z&nbsp;těchto matic je
+přitom ortogonální a druhá má nenulové hodnoty jen v&nbsp;horním trojúhelníku
+(nad hlavní diagonálou, včetně této diagonály).</p>
+
+<p>Opět si ukažme příklady:</p>
+
+<pre>
+; matice 3x3 prvky
+<strong>(def M1 (matrix [[1 2 3] [4 5 6] [7 8 9]]))</strong>
+&nbsp;
+; matice 5x5 prvků
+<strong>(def M2 (matrix (range 25) 5))</strong>
+</pre>
+
+<p>Výsledky QR rozkladu mají opět tvar slovníku s&nbsp;klíči :Q a :R:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(println (decomp-qr M1))</strong>
+{
+:Q #vectorz/matrix [[-0.12309149097933259,0.9045340337332904,-0.4082482904638633],
+                    [-0.49236596391733084,0.30151134457776413,0.8164965809277258],
+                    [-0.8616404368553291,-0.30151134457776385,-0.4082482904638628]],
+:R #vectorz/matrix [[-8.12403840463596,-9.601136296387953,-11.078234188139945],
+                    [0.0,0.9045340337332906,1.809068067466581],
+                    [0.0,0.0,-6.661338147750939E-16]]}
+&nbsp;
+incanter.irepl=&gt; <strong>(println (decomp-qr M2))</strong>
+{
+:Q #vectorz/matrix [[0.0,-0.7745966692414818,-0.30512113519655665,0.5539103544817643,-0.009187603292109298],
+                    [-0.18257418583505536,-0.5163977794943237,0.24754825162995142,-0.594633690716072,-0.5339762513261572],
+                    [-0.3651483716701107,-0.258198889747162,-0.12568824995571656,-0.41734960180272546,0.7810389066481741],
+                    [-0.5477225575051661,4.996003610813204E-16,0.7292162858078016,0.40295885782662166,0.07660135385056112],
+                    [-0.7302967433402214,0.25819888974716165,-0.5459551522854807,0.05511408021041447,-0.31447640588046855]],
+:R #vectorz/matrix [[-27.386127875258307,-29.211869733608857,-31.037611591959404,-32.86335345030996,-34.68909530866052],
+                    [0.0,-1.2909944487358018,-2.5819888974716023,-3.872983346207408,-5.163977794943221],
+                    [0.0,0.0,3.1403075784452076E-15,7.690699366007125E-16,-3.204335410487563E-15],
+                    [0.0,0.0,0.0,2.755673002419323E-15,1.1022692009677294E-14],
+                    [0.0,0.0,0.0,0.0,-1.5777218104420236E-30]]}
+</pre>
+
+<p><div class="rs-tip-major">Poznámka: v&nbsp;posledním výsledku je pěkně
+vidět, jak vypadá matice R.</div></p>
+
+
+
+<p><a name="k17"></a></p>
+<h2 id="k17">17. Choleského dekompozice</h2>
+
+<p>Poslední dekompozicí, kterou si dnes popíšeme, je takzvaná Choleského
+dekompozice, kterou lze použít pro symetrické matice. Výsledkem jsou opět dvě
+matice, konkrétně dvě trojúhelníkové matice, přičemž jedna trojuhélníková
+matice je hermitovsky sdružená k&nbsp;matici druhé (v&nbsp;reálném případě
+transponovaná). Příklad vstupní matice jsem převzal <a
+href="https://en.wikipedia.org/wiki/Cholesky_decomposition#Example">z&nbsp;Wikipedie</a>:</p>
+
+<pre>
+incanter.irepl=&gt; <strong>(def M1 (symmetric-matrix [4 12 37 -16 -43 98]))</strong>
+#'incanter.irepl/M1
+&nbsp;
+incanter.irepl=&gt; <strong>M1</strong>
+#vectorz/matrix [[  4.0, 12.0,-16.0],
+                 [ 12.0, 37.0,-43.0],
+                 [-16.0,-43.0, 98.0]]
+&nbsp;
+incanter.irepl=&gt; <strong>(decomp-cholesky M1)</strong>
+{
+:L #vectorz/matrix  [[ 2.0, 0.0, 0.0],
+                     [ 6.0, 1.0, 0.0],
+                     [-8.0, 5.0, 3.0]],
+:L* #vectorz/matrix [[ 2.0, 6.0,-8.0],
+                     [ 0.0, 1.0, 5.0],
+                     [ 0.0, 0.0, 3.0]]}
+</pre>
+
+<p>Povšimněte si, že skutečně byly vypočteny dvě matice, přičemž druhá je
+transponovaná matice první. Obě matice jsou současně trojúhelníkové.</p>
+
+
+
+<p><a name="k18"></a></p>
+<h2 id="k18">18. Repositář s&nbsp;demonstračními příklady</h2>
+
+<p>Zdrojové kódy všech dnes popsaných demonstračních příkladů byly uloženy do
+Git repositáře dostupného na adrese <a
+href="https://github.com/tisnik/incanter-examples">https://github.com/tisnik/incanter-examples</a>
+(stále na GitHubu :-). V&nbsp;případě, že nebudete chtít klonovat celý
+repositář (ten je ovšem stále velmi malý, dnes má doslova několik kilobajtů),
+můžete namísto toho použít odkazy na jednotlivé příklady, které naleznete
+v&nbsp;následující tabulce:</p>
+
+<table>
+<tr><th>#</th><th>Demonstrační příklad</th><th>Popis</th><th>Cesta</th></tr>
+<tr><td>1</td><td>01_matrix_contructors.clj</td><td>různé konstruktory matic</td><td><a href="https://github.com/tisnik/incanter-examples/blob/master/incanter-2/01_matrix_contructors.clj">https://github.com/tisnik/incanter-examples/blob/master/incanter-1/01_matrix_contructors.clj</a></td></tr>
+<tr><td>2</td><td>02_matrix_item_operations.clj</td><td>operace prováděné nad prvky matic</td><td><a href="https://github.com/tisnik/incanter-examples/blob/master/incanter-2/02_matrix_item_operations.clj">https://github.com/tisnik/incanter-examples/blob/master/incanter-1/02_matrix_item_operations.clj</a></td></tr>
+<tr><td>3</td><td>03_matrix_operations.clj</td><td>operace prováděné s&nbsp;celými maticemi</td><td><a href="https://github.com/tisnik/incanter-examples/blob/master/incanter-2/03_matrix_operations.clj">https://github.com/tisnik/incanter-examples/blob/master/incanter-1/03_matrix_operations.clj</a></td></tr>
+<tr><td>4</td><td>04_matrix_solve_A.clj</td><td>řešení lineární rovnice</td><td><a href="https://github.com/tisnik/incanter-examples/blob/master/incanter-2/04_matrix_solve_A.clj">https://github.com/tisnik/incanter-examples/blob/master/incanter-1/04_matrix_solve_A.clj</a></td></tr>
+<tr><td>5</td><td>05_matrix_solve_B.clj</td><td>řešení soustavy lineárních rovnic</td><td><a href="https://github.com/tisnik/incanter-examples/blob/master/incanter-2/05_matrix_solve_B.clj">https://github.com/tisnik/incanter-examples/blob/master/incanter-1/05_matrix_solve_B.clj</a></td></tr>
+<tr><td>6</td><td>06_matrix_decomp.clj</td><td>dekompozice matic</td><td><a href="https://github.com/tisnik/incanter-examples/blob/master/incanter-2/06_matrix_decomp.clj">https://github.com/tisnik/incanter-examples/blob/master/incanter-1/06_matrix_decomp.clj</a></td></tr>
+<tr><td>7</td><td>07_matrix_subset.clj</td><td>čtení podmatic</td><td><a href="https://github.com/tisnik/incanter-examples/blob/master/incanter-2/07_matrix_subset.clj">https://github.com/tisnik/incanter-examples/blob/master/incanter-1/07_matrix_subset.clj</a></td></tr>
+<tr><td>8</td><td>08_view_matrix.clj</td><td>zobrazení matic v&nbsp;samostatném okně s&nbsp;GUI</td><td><a href="https://github.com/tisnik/incanter-examples/blob/master/incanter-2/08_view_matrix.clj">https://github.com/tisnik/incanter-examples/blob/master/incanter-1/08_view_matrix.clj</a></td></tr>
+</table>
+
+
+
+<p><a name="k19"></a></p>
+<h2 id="k19">19. Předchozí články o programovacím jazyku Clojure a jeho knihovnách</h2>
+
+<ol>
+
+<li>Clojure  1: Úvod<br />
+<a href="http://www.root.cz/clanky/clojure-aneb-jazyk-umoznujici-tvorbu-bezpecnych-vicevlaknovych-aplikaci-pro-jvm/">http://www.root.cz/clanky/clojure-aneb-jazyk-umoznujici-tvorbu-bezpecnych-vicevlaknovych-aplikaci-pro-jvm/</a>
+</li>
+
+<li>Clojure  2: Symboly, kolekce atd.<br />
+<a href="http://www.root.cz/clanky/clojure-aneb-jazyk-umoznujici-tvorbu-bezpecnych-vicevlaknovych-aplikaci-pro-jvm-2-cast/">http://www.root.cz/clanky/clojure-aneb-jazyk-umoznujici-tvorbu-bezpecnych-vicevlaknovych-aplikaci-pro-jvm-2-cast/</a>
+</li>
+
+<li>Clojure  3: Funkcionální programování<br />
+<a href="http://www.root.cz/clanky/clojure-aneb-jazyk-umoznujici-tvorbu-bezpecnych-vicevlaknovych-aplikaci-pro-jvm-3-cast-funkcionalni-programovani/">http://www.root.cz/clanky/clojure-aneb-jazyk-umoznujici-tvorbu-bezpecnych-vicevlaknovych-aplikaci-pro-jvm-3-cast-funkcionalni-programovani/</a>
+</li>
+
+<li>Clojure  4: Kolekce, sekvence a lazy sekvence<br />
+<a href="http://www.root.cz/clanky/clojure-aneb-jazyk-umoznujici-tvorbu-bezpecnych-vicevlaknovych-aplikaci-pro-jvm-4-cast-kolekce-sekvence-a-lazy-sekvence/">http://www.root.cz/clanky/clojure-aneb-jazyk-umoznujici-tvorbu-bezpecnych-vicevlaknovych-aplikaci-pro-jvm-4-cast-kolekce-sekvence-a-lazy-sekvence/</a>
+</li>
+
+<li>Clojure  5: Sekvence, lazy sekvence a paralelní programy<br />
+<a href="http://www.root.cz/clanky/clojure-a-bezpecne-aplikace-pro-jvm-sekvence-lazy-sekvence-a-paralelni-programy/">http://www.root.cz/clanky/clojure-a-bezpecne-aplikace-pro-jvm-sekvence-lazy-sekvence-a-paralelni-programy/</a>
+</li>
+
+<li>Clojure  6: Podpora pro paralelní programování<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-6-futures-nejsou-jen-financni-derivaty/">http://www.root.cz/clanky/programovaci-jazyk-clojure-6-futures-nejsou-jen-financni-derivaty/</a>
+</li>
+
+<li>Clojure  7: Další funkce pro paralelní programování<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-7-dalsi-podpurne-prostredky-pro-paralelni-programovani/">http://www.root.cz/clanky/programovaci-jazyk-clojure-7-dalsi-podpurne-prostredky-pro-paralelni-programovani/</a>
+</li>
+
+<li>Clojure  8: Identity, stavy, neměnné hodnoty a reference<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-8-identity-stavy-nemenne-hodnoty-a-referencni-typy/">http://www.root.cz/clanky/programovaci-jazyk-clojure-8-identity-stavy-nemenne-hodnoty-a-referencni-typy/</a>
+</li>
+
+<li>Clojure  9: Validátory, pozorovatelé a kooperace s Javou<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-9-validatory-pozorovatele-a-kooperace-mezi-clojure-a-javou/">http://www.root.cz/clanky/programovaci-jazyk-clojure-9-validatory-pozorovatele-a-kooperace-mezi-clojure-a-javou/</a>
+</li>
+
+<li>Clojure 10: Kooperace mezi Clojure a Javou<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-10-kooperace-mezi-clojure-a-javou-pokracovani/">http://www.root.cz/clanky/programovaci-jazyk-clojure-10-kooperace-mezi-clojure-a-javou-pokracovani/</a>
+</li>
+
+<li>Clojure 11: Generátorová notace seznamu/list comprehension<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-11-generatorova-notace-seznamu-list-comprehension/">http://www.root.cz/clanky/programovaci-jazyk-clojure-11-generatorova-notace-seznamu-list-comprehension/</a>
+</li>
+
+<li>Clojure 12: Překlad programů z Clojure do bajtkódu JVM I:<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-12-preklad-programu-z-clojure-do-bajtkodu-jvm/">http://www.root.cz/clanky/programovaci-jazyk-clojure-12-preklad-programu-z-clojure-do-bajtkodu-jvm/</a>
+</li>
+
+<li>Clojure 13: Překlad programů z Clojure do bajtkódu JVM II:<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-13-preklad-programu-z-clojure-do-bajtkodu-jvm-pokracovani/">http://www.root.cz/clanky/programovaci-jazyk-clojure-13-preklad-programu-z-clojure-do-bajtkodu-jvm-pokracovani/</a>
+</li>
+
+<li>Clojure 14: Základy práce se systémem maker<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-14-zaklady-prace-se-systemem-maker/">http://www.root.cz/clanky/programovaci-jazyk-clojure-14-zaklady-prace-se-systemem-maker/</a>
+</li>
+
+<li>Clojure 15: Tvorba uživatelských maker<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-15-tvorba-uzivatelskych-maker/">http://www.root.cz/clanky/programovaci-jazyk-clojure-15-tvorba-uzivatelskych-maker/</a>
+</li>
+
+<li>Programovací jazyk Clojure – triky při práci s řetězci<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-triky-pri-praci-s-retezci/">http://www.root.cz/clanky/programovaci-jazyk-clojure-triky-pri-praci-s-retezci/</a>
+</li>
+
+<li>Programovací jazyk Clojure – triky při práci s kolekcemi<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-triky-pri-praci-s-kolekcemi/">http://www.root.cz/clanky/programovaci-jazyk-clojure-triky-pri-praci-s-kolekcemi/</a>
+</li>
+
+<li>Programovací jazyk Clojure – práce s mapami a množinami<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-prace-s-mapami-a-mnozinami/">http://www.root.cz/clanky/programovaci-jazyk-clojure-prace-s-mapami-a-mnozinami/</a>
+</li>
+
+<li>Programovací jazyk Clojure – základy zpracování XML<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-zaklady-zpracovani-xml/">http://www.root.cz/clanky/programovaci-jazyk-clojure-zaklady-zpracovani-xml/</a>
+</li>
+
+<li>Programovací jazyk Clojure – testování s využitím knihovny Expectations<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-testovani-s-vyuzitim-knihovny-expectations/">http://www.root.cz/clanky/programovaci-jazyk-clojure-testovani-s-vyuzitim-knihovny-expectations/</a>
+</li>
+
+<li>Programovací jazyk Clojure – některé užitečné triky použitelné (nejenom) v&nbsp;testech<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-nektere-uzitecne-triky-pouzitelne-nejenom-v-testech/">http://www.root.cz/clanky/programovaci-jazyk-clojure-nektere-uzitecne-triky-pouzitelne-nejenom-v-testech/</a>
+</li>
+
+<li>Enlive – výkonný šablonovací systém pro jazyk Clojure<br/>
+<a href="http://www.root.cz/clanky/enlive-vykonny-sablonovaci-system-pro-jazyk-clojure/">http://www.root.cz/clanky/enlive-vykonny-sablonovaci-system-pro-jazyk-clojure/</a>
+</li>
+
+<li>Nástroj Leiningen a programovací jazyk Clojure: tvorba vlastních knihoven pro veřejný repositář Clojars<br />
+<a href="http://www.root.cz/clanky/nastroj-leiningen-a-programovaci-jazyk-clojure-tvorba-vlastnich-knihoven-pro-verejny-repositar-clojars/">http://www.root.cz/clanky/nastroj-leiningen-a-programovaci-jazyk-clojure-tvorba-vlastnich-knihoven-pro-verejny-repositar-clojars/</a>
+</li>
+
+<li>Novinky v Clojure verze 1.8.0<br />
+<a href="http://www.root.cz/clanky/novinky-v-clojure-verze-1-8-0/">http://www.root.cz/clanky/novinky-v-clojure-verze-1-8-0/</a>
+</li>
+
+<li>Asynchronní programování v&nbsp;Clojure s&nbsp;využitím knihovny core.async<br />
+<a href="http://www.root.cz/clanky/asynchronni-programovani-v-clojure-s-vyuzitim-knihovny-core-async/">http://www.root.cz/clanky/asynchronni-programovani-v-clojure-s-vyuzitim-knihovny-core-async/</a>
+</li>
+
+<li>Asynchronní programování v&nbsp;Clojure s&nbsp;využitím knihovny core.async (pokračování)<br />
+<a href="http://www.root.cz/clanky/asynchronni-programovani-v-clojure-s-vyuzitim-knihovny-core-async-pokracovani/">http://www.root.cz/clanky/asynchronni-programovani-v-clojure-s-vyuzitim-knihovny-core-async-pokracovani/</a>
+</li>
+
+<li>Asynchronní programování v Clojure s využitím knihovny core.async (dokončení)<br />
+<a href="http://www.root.cz/clanky/asynchronni-programovani-v-clojure-s-vyuzitim-knihovny-core-async-dokonceni/">http://www.root.cz/clanky/asynchronni-programovani-v-clojure-s-vyuzitim-knihovny-core-async-dokonceni/</a>
+</li>
+
+<li>Vytváříme IRC bota v programovacím jazyce Clojure<br />
+<a href="http://www.root.cz/clanky/vytvarime-irc-bota-v-programovacim-jazyce-clojure/">http://www.root.cz/clanky/vytvarime-irc-bota-v-programovacim-jazyce-clojure/</a>
+</li>
+
+<li>Gorilla REPL: interaktivní prostředí pro programovací jazyk Clojure<br />
+<a href="https://www.root.cz/clanky/gorilla-repl-interaktivni-prostredi-pro-programovaci-jazyk-clojure/">https://www.root.cz/clanky/gorilla-repl-interaktivni-prostredi-pro-programovaci-jazyk-clojure/</a>
+</li>
+
+<li>Multimetody v Clojure aneb polymorfismus bez použití OOP<br />
+<a href="https://www.root.cz/clanky/multimetody-v-clojure-aneb-polymorfismus-bez-pouziti-oop/">https://www.root.cz/clanky/multimetody-v-clojure-aneb-polymorfismus-bez-pouziti-oop/</a>
+</li>
+
+<li>Práce s externími Java archivy v programovacím jazyku Clojure<br />
+<a href="https://www.root.cz/clanky/prace-s-externimi-java-archivy-v-programovacim-jazyku-clojure/">https://www.root.cz/clanky/prace-s-externimi-java-archivy-v-programovacim-jazyku-clojure/</a>
+</li>
+
+<li>Clojure 16: Složitější uživatelská makra<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-16-slozitejsi-uzivatelska-makra/">http://www.root.cz/clanky/programovaci-jazyk-clojure-16-slozitejsi-uzivatelska-makra/</a>
+</li>
+
+<li>Clojure 17: Využití standardních maker v praxi<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-17-vyuziti-standardnich-maker-v-praxi/">http://www.root.cz/clanky/programovaci-jazyk-clojure-17-vyuziti-standardnich-maker-v-praxi/</a>
+</li>
+
+<li>Clojure 18: Základní techniky optimalizace aplikací<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-18-zakladni-techniky-optimalizace-aplikaci/">http://www.root.cz/clanky/programovaci-jazyk-clojure-18-zakladni-techniky-optimalizace-aplikaci/</a>
+</li>
+
+<li>Clojure 19: Vývojová prostředí pro Clojure<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-19-vyvojova-prostredi-pro-clojure/">http://www.root.cz/clanky/programovaci-jazyk-clojure-19-vyvojova-prostredi-pro-clojure/</a>
+</li>
+
+<li>Clojure 20: Vývojová prostředí pro Clojure (Vimu s REPL)<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-20-vyvojova-prostredi-pro-clojure-integrace-vimu-s-repl/">http://www.root.cz/clanky/programovaci-jazyk-clojure-20-vyvojova-prostredi-pro-clojure-integrace-vimu-s-repl/</a>
+</li>
+
+<li>Clojure 21: ClojureScript aneb překlad Clojure do JS<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-21-clojurescript-aneb-preklad-clojure-do-javascriptu/">http://www.root.cz/clanky/programovaci-jazyk-clojure-21-clojurescript-aneb-preklad-clojure-do-javascriptu/</a>
+</li>
+
+<li>Leiningen: nástroj pro správu projektů napsaných v Clojure<br />
+<a href="http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure/">http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure/</a>
+</li>
+
+<li>Leiningen: nástroj pro správu projektů napsaných v Clojure (2)<br />
+<a href="http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-2/">http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-2/</a>
+</li>
+
+<li>Leiningen: nástroj pro správu projektů napsaných v Clojure (3)<br />
+<a href="http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-3/">http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-3/</a>
+</li>
+
+<li>Leiningen: nástroj pro správu projektů napsaných v Clojure (4)<br />
+<a href="http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-4/">http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-4/</a>
+</li>
+
+<li>Leiningen: nástroj pro správu projektů napsaných v Clojure (5)<br />
+<a href="http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-5/">http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-5/</a>
+</li>
+
+<li>Leiningen: nástroj pro správu projektů napsaných v Clojure (6)<br />
+<a href="http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-6/">http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-6/</a>
+</li>
+
+<li>Programovací jazyk Clojure a databáze (1.část)<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-a-databaze-1-cast/">http://www.root.cz/clanky/programovaci-jazyk-clojure-a-databaze-1-cast/</a>
+</li>
+
+<li>Pluginy pro Leiningen<br />
+<a href="http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-pluginy-pro-leiningen/">http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-pluginy-pro-leiningen/</a>
+</li>
+
+<li>Programovací jazyk Clojure a knihovny pro práci s vektory a maticemi<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-a-knihovny-pro-praci-s-vektory-a-maticemi/">http://www.root.cz/clanky/programovaci-jazyk-clojure-a-knihovny-pro-praci-s-vektory-a-maticemi/</a>
+</li>
+
+<li>Programovací jazyk Clojure a knihovny pro práci s vektory a maticemi (2)<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-a-knihovny-pro-praci-s-vektory-a-maticemi-2/">http://www.root.cz/clanky/programovaci-jazyk-clojure-a-knihovny-pro-praci-s-vektory-a-maticemi-2/</a>
+</li>
+
+<li>Programovací jazyk Clojure: syntéza procedurálních textur s využitím knihovny Clisk<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-synteza-proceduralnich-textur-s-vyuzitim-knihovny-clisk/">http://www.root.cz/clanky/programovaci-jazyk-clojure-synteza-proceduralnich-textur-s-vyuzitim-knihovny-clisk/</a>
+</li>
+
+<li>Programovací jazyk Clojure: syntéza procedurálních textur s využitím knihovny Clisk (2)<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-synteza-proceduralnich-textur-s-vyuzitim-knihovny-clisk-2/">http://www.root.cz/clanky/programovaci-jazyk-clojure-synteza-proceduralnich-textur-s-vyuzitim-knihovny-clisk-2/</a>
+</li>
+
+<li>Seesaw: knihovna pro snadnou tvorbu GUI v jazyce Clojure<br />
+<a href="http://www.root.cz/clanky/seesaw-knihovna-pro-snadnou-tvorbu-gui-v-jazyce-clojure/">http://www.root.cz/clanky/seesaw-knihovna-pro-snadnou-tvorbu-gui-v-jazyce-clojure/</a>
+</li>
+
+<li>Seesaw: knihovna pro snadnou tvorbu GUI v jazyce Clojure (2)<br />
+<a href="http://www.root.cz/clanky/seesaw-knihovna-pro-snadnou-tvorbu-gui-v-jazyce-clojure-2/">http://www.root.cz/clanky/seesaw-knihovna-pro-snadnou-tvorbu-gui-v-jazyce-clojure-2/</a>
+</li>
+
+<li>Seesaw: knihovna pro snadnou tvorbu GUI v jazyce Clojure (3)<br />
+<a href="http://www.root.cz/clanky/seesaw-knihovna-pro-snadnou-tvorbu-gui-v-jazyce-clojure-3/">http://www.root.cz/clanky/seesaw-knihovna-pro-snadnou-tvorbu-gui-v-jazyce-clojure-3/</a>
+</li>
+
+<li>Programovací jazyk Clojure a práce s Gitem<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-a-prace-s-gitem/">http://www.root.cz/clanky/programovaci-jazyk-clojure-a-prace-s-gitem/</a>
+</li>
+
+<li>Programovací jazyk Clojure a práce s Gitem (2)<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-a-prace-s-gitem-2/">http://www.root.cz/clanky/programovaci-jazyk-clojure-a-prace-s-gitem-2/</a>
+</li>
+
+<li>Programovací jazyk Clojure: syntéza procedurálních textur s využitím knihovny Clisk (dokončení)<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-synteza-proceduralnich-textur-s-vyuzitim-knihovny-clisk-dokonceni/">http://www.root.cz/clanky/programovaci-jazyk-clojure-synteza-proceduralnich-textur-s-vyuzitim-knihovny-clisk-dokonceni/</a>
+</li>
+
+<li>Pixie: lehký skriptovací jazyk s „kouzelnými“ schopnostmi<br />
+<a href="https://www.root.cz/clanky/pixie-lehky-skriptovaci-jazyk-s-kouzelnymi-schopnostmi/">https://www.root.cz/clanky/pixie-lehky-skriptovaci-jazyk-s-kouzelnymi-schopnostmi/</a>
+</li>
+
+<li>Programovací jazyk Pixie: funkce ze základní knihovny a použití FFI<br />
+<a href="https://www.root.cz/clanky/programovaci-jazyk-pixie-funkce-ze-zakladni-knihovny-a-pouziti-ffi/">https://www.root.cz/clanky/programovaci-jazyk-pixie-funkce-ze-zakladni-knihovny-a-pouziti-ffi/</a>
+</li>
+
+<li>Novinky v Clojure verze 1.9.0<br />
+<a href="https://www.root.cz/clanky/novinky-v-clojure-verze-1-9-0/">https://www.root.cz/clanky/novinky-v-clojure-verze-1-9-0/</a>
+</li>
+
+<li>Validace dat s&nbsp;využitím knihovny spec v&nbsp;Clojure 1.9.0<br />
+<a href="https://www.root.cz/clanky/validace-dat-s-vyuzitim-knihovny-spec-v-clojure-1-9-0/">https://www.root.cz/clanky/validace-dat-s-vyuzitim-knihovny-spec-v-clojure-1-9-0/</a>
+</li>
+
+<li>Použití jazyka Gherkin při tvorbě testovacích scénářů pro aplikace psané v Clojure<br />
+<a href="https://www.root.cz/clanky/pouziti-jazyka-gherkin-pri-tvorbe-testovacich-scenaru-pro-aplikace-psane-v-nbsp-clojure/">https://www.root.cz/clanky/pouziti-jazyka-gherkin-pri-tvorbe-testovacich-scenaru-pro-aplikace-psane-v-nbsp-clojure/</a>
+</li>
+
+<li>Použití jazyka Gherkin při tvorbě testovacích scénářů pro aplikace psané v Clojure (2)<br />
+<a href="https://www.root.cz/clanky/pouziti-jazyka-gherkin-pri-tvorbe-testovacich-scenaru-pro-aplikace-psane-v-nbsp-clojure-2/">https://www.root.cz/clanky/pouziti-jazyka-gherkin-pri-tvorbe-testovacich-scenaru-pro-aplikace-psane-v-nbsp-clojure-2/</a>
+</li>
+
+<li>Incanter: prostředí pro statistické výpočty s grafickým výstupem založené na Clojure<br />
+<a href="https://www.root.cz/clanky/incanter-prostredi-pro-statisticke-vypocty-s-grafickym-vystupem-zalozene-na-clojure/">https://www.root.cz/clanky/incanter-prostredi-pro-statisticke-vypocty-s-grafickym-vystupem-zalozene-na-clojure/</a>
+</li>
+
+</ol>
+
+
+
+<p><a name="k20"></a></p>
+<h2 id="k20">20. Odkazy na Internetu</h2>
+
+<ol>
+
+<li>Stopa (algebra)<br />
+<a href="https://cs.wikipedia.org/wiki/Stopa_(algebra)">https://cs.wikipedia.org/wiki/Stopa_(algebra)</a>
+</li>
+
+<li>Matrix calculator<br />
+<a href="https://matrixcalc.org/en/">https://matrixcalc.org/en/</a>
+</li>
+
+<li>Incanter is a Clojure-based, R-like platform for statistical computing and graphics.<br />
+<a href="http://incanter.org/">http://incanter.org/</a>
+</li>
+
+<li>Evolution of incanter (Gource Visualization)<br />
+<a href="https://www.youtube.com/watch?v=TVfL5nPELr4">https://www.youtube.com/watch?v=TVfL5nPELr4</a>
+</li>
+
+<li>Questions tagged [incanter] (na Stack Overflow)<br />
+<a href="https://stackoverflow.com/questions/tagged/incanter?sort=active">https://stackoverflow.com/questions/tagged/incanter?sort=active</a>
+</li>
+
+<li>Data Sorcery with Clojure<br />
+<a href="https://data-sorcery.org/contents/">https://data-sorcery.org/contents/</a>
+</li>
+
+<li>Back to the Future: Lisp as a Base for a Statistical Computing System<br />
+<a href="https://rd.springer.com/chapter/10.1007/978-3-7908-2084-3_2">https://rd.springer.com/chapter/10.1007/978-3-7908-2084-3_2</a>
+</li>
+
+<li>Incanter Cheat Sheet<br />
+<a href="http://incanter.org/docs/incanter-cheat-sheet.pdf">http://incanter.org/docs/incanter-cheat-sheet.pdf</a>
+</li>
+
+<li>Back to the Future: Lisp as a Base for a Statistical Computing System (celá verze článku)<br />
+<a href="https://www.researchgate.net/publication/227019917_Back_to_the_Future_Lisp_as_a_Base_for_a_Statistical_Computing_System">https://www.researchgate.net/publication/227019917_Back_to_the_Future_Lisp_as_a_Base_for_a_Statistical_Computing_System</a>
+</li>
+
+<li>Lisp-Stat Information<br />
+<a href="http://homepage.cs.uiowa.edu/~luke/xls/xlsinfo/">http://homepage.cs.uiowa.edu/~luke/xls/xlsinfo/</a>
+</li>
+
+<li>Sample Plots in Incanter<br />
+<a href="https://github.com/incanter/incanter/wiki/Sample-Plots-in-Incanter#line">https://github.com/incanter/incanter/wiki/Sample-Plots-in-Incanter#line</a>
+</li>
+
+<li>vectorz-clj<br />
+<a href="https://github.com/mikera/vectorz-clj">https://github.com/mikera/vectorz-clj</a>
+</li>
+
+<li>vectorz - Examples<br />
+<a href="https://github.com/mikera/vectorz-clj/wiki/Examples">https://github.com/mikera/vectorz-clj/wiki/Examples</a>
+</li>
+
+<li>Array Programming<br />
+<a href="https://en.wikipedia.org/wiki/Array_programming">https://en.wikipedia.org/wiki/Array_programming</a>
+</li>
+
+<li>Discovering Array Languages<br />
+<a href="http://archive.vector.org.uk/art10008110">http://archive.vector.org.uk/art10008110</a>
+</li>
+
+<li>no stinking loops -- Kalothi<br />
+<a href="http://www.nsl.com/">http://www.nsl.com/</a>
+</li>
+
+<li>Vector (obsahuje odkazy na články, knihy a blogy o programovacích jazycích APL, J a K)<br />
+<a href="http://www.vector.org.uk/">http://www.vector.org.uk/</a>
+</li>
+
+<li>Colt<br />
+<a href="http://dst.lbl.gov/ACSSoftware/colt/">http://dst.lbl.gov/ACSSoftware/colt/</a>
+</li>
+
+<li>Parallel Colt: Open Source Libraries for High Performance Scientific and Technical Computing in Java<br />
+<a href="http://incanter.org/docs/parallelcolt/api/">http://incanter.org/docs/parallelcolt/api/</a>
+</li>
+
+<li>Processing<br />
+<a href="https://www.processing.org/">https://www.processing.org/</a>
+</li>
+
+<li>The R Project for Statistical Computing<br />
+<a href="https://www.r-project.org/">https://www.r-project.org/</a>
+</li>
+
+<li>Humane test output for clojure.test<br />
+<a href="https://github.com/pjstadig/humane-test-output">https://github.com/pjstadig/humane-test-output</a>
+</li>
+
+<li>iota<br />
+<a href="https://github.com/juxt/iota">https://github.com/juxt/iota</a>
+</li>
+
+<li>5 Differences between clojure.spec and Schema<br />
+<a href="https://lispcast.com/clojure.spec-vs-schema/">https://lispcast.com/clojure.spec-vs-schema/</a>
+</li>
+
+<li>Schema: Clojure(Script) library for declarative data description and validation<br />
+<a href="https://github.com/plumatic/schema">https://github.com/plumatic/schema</a>
+</li>
+
+<li>Zip archiv s&nbsp;Clojure 1.9.0<br />
+<a href="http://repo1.maven.org/maven2/org/clojure/clojure/1.9.0/clojure-1.9.0.zip">http://repo1.maven.org/maven2/org/clojure/clojure/1.9.0/clojure-1.9.0.zip</a>
+</li>
+
+<li>Clojure 1.9 is now available<br />
+<a href="https://clojure.org/news/2017/12/08/clojure19">https://clojure.org/news/2017/12/08/clojure19</a>
+</li>
+
+<li>Deps and CLI Guide<br />
+<a href="https://clojure.org/guides/deps_and_cli">https://clojure.org/guides/deps_and_cli</a>
+</li>
+
+<li>Changes to Clojure in Version 1.9<br />
+<a href="https://github.com/clojure/clojure/blob/master/changes.md">https://github.com/clojure/clojure/blob/master/changes.md</a>
+</li>
+
+<li>clojure.spec - Rationale and Overview<br />
+<a href="https://clojure.org/about/spec">https://clojure.org/about/spec</a>
+</li>
+
+<li>Zip archiv s&nbsp;Clojure 1.8.0<br />
+<a href="http://repo1.maven.org/maven2/org/clojure/clojure/1.8.0/clojure-1.8.0.zip">http://repo1.maven.org/maven2/org/clojure/clojure/1.8.0/clojure-1.8.0.zip</a>
+</li>
+
+<li>Clojure 1.8 is now available<br />
+<a href="http://clojure.org/news/2016/01/19/clojure18">http://clojure.org/news/2016/01/19/clojure18</a>
+</li>
+
+<li>Socket Server REPL<br />
+<a href="http://dev.clojure.org/display/design/Socket+Server+REPL">http://dev.clojure.org/display/design/Socket+Server+REPL</a>
+</li>
+
+<li>CLJ-1671: Clojure socket server<br />
+<a href="http://dev.clojure.org/jira/browse/CLJ-1671">http://dev.clojure.org/jira/browse/CLJ-1671</a>
+</li>
+
+<li>CLJ-1449: Add clojure.string functions for portability to ClojureScript<br />
+<a href="http://dev.clojure.org/jira/browse/CLJ-1449">http://dev.clojure.org/jira/browse/CLJ-1449</a>
+</li>
+
+<li>Launching a Socket Server<br />
+<a href="http://clojure.org/reference/repl_and_main#_launching_a_socket_server">http://clojure.org/reference/repl_and_main#_launching_a_socket_server</a>
+</li>
+
+<li>API for clojure.string<br />
+<a href="http://clojure.github.io/clojure/branch-master/clojure.string-api.html">http://clojure.github.io/clojure/branch-master/clojure.string-api.html</a>
+</li>
+
+<li>Clojars:<br />
+<a href="https://clojars.org/">https://clojars.org/</a>
+</li>
+
+<li>Seznam knihoven na Clojars:<br />
+<a href="https://clojars.org/projects">https://clojars.org/projects</a>
+</li>
+
+<li>Clojure Cookbook: Templating HTML with Enlive<br />
+<a href="https://github.com/clojure-cookbook/clojure-cookbook/blob/master/07_webapps/7-11_enlive.asciidoc">https://github.com/clojure-cookbook/clojure-cookbook/blob/master/07_webapps/7-11_enlive.asciidoc</a>
+</li>
+
+<li>An Introduction to Enlive<br />
+<a href="https://github.com/swannodette/enlive-tutorial/">https://github.com/swannodette/enlive-tutorial/</a>
+</li>
+
+<li>Enlive na GitHubu<br />
+<a href="https://github.com/cgrand/enlive">https://github.com/cgrand/enlive</a>
+</li>
+
+<li>Expectations: příklady atd.<br />
+<a href="http://jayfields.com/expectations/">http://jayfields.com/expectations/</a>
+</li>
+
+<li>Expectations na GitHubu<br />
+<a href="https://github.com/jaycfields/expectations">https://github.com/jaycfields/expectations</a>
+</li>
+
+<li>Lein-expectations na GitHubu<br />
+<a href="https://github.com/gar3thjon3s/lein-expectations">https://github.com/gar3thjon3s/lein-expectations</a>
+</li>
+
+<li>Testing Clojure With Expectations<br />
+<a href="https://semaphoreci.com/blog/2014/09/23/testing-clojure-with-expectations.html">https://semaphoreci.com/blog/2014/09/23/testing-clojure-with-expectations.html</a>
+</li>
+
+<li>Clojure testing TDD/BDD libraries: clojure.test vs Midje vs Expectations vs Speclj<br />
+<a href="https://www.reddit.com/r/Clojure/comments/1viilt/clojure_testing_tddbdd_libraries_clojuretest_vs/">https://www.reddit.com/r/Clojure/comments/1viilt/clojure_testing_tddbdd_libraries_clojuretest_vs/</a>
+</li>
+
+<li>Testing: One assertion per test<br />
+<a href="http://blog.jayfields.com/2007/06/testing-one-assertion-per-test.html">http://blog.jayfields.com/2007/06/testing-one-assertion-per-test.html</a>
+</li>
+
+<li>Rewriting Your Test Suite in Clojure in 24 hours<br />
+<a href="http://blog.circleci.com/rewriting-your-test-suite-in-clojure-in-24-hours/">http://blog.circleci.com/rewriting-your-test-suite-in-clojure-in-24-hours/</a>
+</li>
+
+<li>Clojure doc: zipper<br />
+<a href="http://clojuredocs.org/clojure.zip/zipper">http://clojuredocs.org/clojure.zip/zipper</a>
+</li>
+
+<li>Clojure doc: parse<br />
+<a href="http://clojuredocs.org/clojure.xml/parse">http://clojuredocs.org/clojure.xml/parse</a>
+</li>
+
+<li>Clojure doc: xml-zip<br />
+<a href="http://clojuredocs.org/clojure.zip/xml-zip">http://clojuredocs.org/clojure.zip/xml-zip</a>
+</li>
+
+<li>Clojure doc: xml-seq<br />
+<a href="http://clojuredocs.org/clojure.core/xml-seq">http://clojuredocs.org/clojure.core/xml-seq</a>
+</li>
+
+<li>Parsing XML in Clojure<br />
+<a href="https://github.com/clojuredocs/guides">https://github.com/clojuredocs/guides</a>
+</li>
+
+<li>Clojure Zipper Over Nested Vector<br />
+<a href="https://vitalyper.wordpress.com/2010/11/23/clojure-zipper-over-nested-vector/">https://vitalyper.wordpress.com/2010/11/23/clojure-zipper-over-nested-vector/</a>
+</li>
+
+<li>Understanding Clojure's PersistentVector implementation<br />
+<a href="http://blog.higher-order.net/2009/02/01/understanding-clojures-persistentvector-implementation">http://blog.higher-order.net/2009/02/01/understanding-clojures-persistentvector-implementation</a>
+</li>
+
+<li>Understanding Clojure's PersistentHashMap (deftwice...)<br />
+<a href="http://blog.higher-order.net/2009/09/08/understanding-clojures-persistenthashmap-deftwice.html">http://blog.higher-order.net/2009/09/08/understanding-clojures-persistenthashmap-deftwice.html</a>
+</li>
+
+<li>Assoc and Clojure's PersistentHashMap: part ii<br />
+<a href="http://blog.higher-order.net/2010/08/16/assoc-and-clojures-persistenthashmap-part-ii.html">http://blog.higher-order.net/2010/08/16/assoc-and-clojures-persistenthashmap-part-ii.html</a>
+</li>
+
+<li>Ideal Hashtrees (paper)<br />
+<a href="http://lampwww.epfl.ch/papers/idealhashtrees.pdf">http://lampwww.epfl.ch/papers/idealhashtrees.pdf</a>
+</li>
+
+<li>Clojure home page<br />
+<a href="http://clojure.org/">http://clojure.org/</a>
+</li>
+
+<li>Clojure (downloads)<br />
+<a href="http://clojure.org/downloads">http://clojure.org/downloads</a>
+</li>
+
+<li>Clojure Sequences<br />
+<a href="http://clojure.org/sequences">http://clojure.org/sequences</a>
+</li>
+
+<li>Clojure Data Structures<br />
+<a href="http://clojure.org/data_structures">http://clojure.org/data_structures</a>
+</li>
+
+<li>The Structure and Interpretation of Computer Programs: 2.2.1  Representing Sequences<br />
+<a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-15.html#%_sec_2.2.1">http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-15.html#%_sec_2.2.1</a>
+</li>
+
+<li>The Structure and Interpretation of Computer Programs: 3.3.1  Mutable List Structure<br />
+<a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3.1">http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3.1</a>
+</li>
+
+<li>Clojure - Functional Programming for the JVM<br />
+<a href="http://java.ociweb.com/mark/clojure/article.html">http://java.ociweb.com/mark/clojure/article.html</a>
+</li>
+
+<li>Clojure quick reference<br />
+<a href="http://faustus.webatu.com/clj-quick-ref.html">http://faustus.webatu.com/clj-quick-ref.html</a>
+</li>
+
+<li>4Clojure<br />
+<a href="http://www.4clojure.com/">http://www.4clojure.com/</a>
+</li>
+
+<li>ClojureDoc (rozcestník s&nbsp;dokumentací jazyka Clojure)<br />
+<a href="http://clojuredocs.org/">http://clojuredocs.org/</a>
+</li>
+
+<li>Clojure (na Wikipedia EN)<br />
+<a href="http://en.wikipedia.org/wiki/Clojure">http://en.wikipedia.org/wiki/Clojure</a>
+</li>
+
+<li>Clojure (na Wikipedia CS)<br />
+<a href="http://cs.wikipedia.org/wiki/Clojure">http://cs.wikipedia.org/wiki/Clojure</a>
+</li>
+
+<li>SICP (The Structure and Interpretation of Computer Programs)<br />
+<a href="http://mitpress.mit.edu/sicp/">http://mitpress.mit.edu/sicp/</a>
+</li>
+
+<li>Pure function<br />
+<a href="http://en.wikipedia.org/wiki/Pure_function">http://en.wikipedia.org/wiki/Pure_function</a>
+</li>
+
+<li>Funkcionální programování<br />
+<a href="http://cs.wikipedia.org/wiki/Funkcionální_programování">http://cs.wikipedia.org/wiki/Funkcionální_programování</a>
+</li>
+
+<li>Čistě funkcionální (datové struktury, jazyky, programování)<br />
+<a href="http://cs.wikipedia.org/wiki/Čistě_funkcionální">http://cs.wikipedia.org/wiki/Čistě_funkcionální</a>
+</li>
+
+<li>Clojure Macro Tutorial (Part I, Getting the Compiler to Write Your Code For You)<br />
+<a href="http://www.learningclojure.com/2010/09/clojure-macro-tutorial-part-i-getting.html">http://www.learningclojure.com/2010/09/clojure-macro-tutorial-part-i-getting.html</a>
+</li>
+
+<li>Clojure Macro Tutorial (Part II: The Compiler Strikes Back)<br />
+<a href="http://www.learningclojure.com/2010/09/clojure-macro-tutorial-part-ii-compiler.html">http://www.learningclojure.com/2010/09/clojure-macro-tutorial-part-ii-compiler.html</a>
+</li>
+
+<li>Clojure Macro Tutorial (Part III: Syntax Quote)<br />
+<a href="http://www.learningclojure.com/2010/09/clojure-macro-tutorial-part-ii-syntax.html">http://www.learningclojure.com/2010/09/clojure-macro-tutorial-part-ii-syntax.html</a>
+</li>
+
+<li>Tech behind Tech: Clojure Macros Simplified<br />
+<a href="http://techbehindtech.com/2010/09/28/clojure-macros-simplified/">http://techbehindtech.com/2010/09/28/clojure-macros-simplified/</a>
+</li>
+
+<li>Fatvat - Exploring functional programming: Clojure Macros<br />
+<a href="http://www.fatvat.co.uk/2009/02/clojure-macros.html">http://www.fatvat.co.uk/2009/02/clojure-macros.html</a>
+</li>
+
+<li>Eulerovo číslo<br />
+<a href="http://cs.wikipedia.org/wiki/Eulerovo_číslo">http://cs.wikipedia.org/wiki/Eulerovo_číslo</a>
+</li>
+
+<li>List comprehension<br />
+<a href="http://en.wikipedia.org/wiki/List_comprehension">http://en.wikipedia.org/wiki/List_comprehension</a>
+</li>
+
+<li>List Comprehensions in Clojure<br />
+<a href="http://asymmetrical-view.com/2008/11/18/list-comprehensions-in-clojure.html">http://asymmetrical-view.com/2008/11/18/list-comprehensions-in-clojure.html</a>
+</li>
+
+<li>Clojure Programming Concepts: List Comprehension<br />
+<a href="http://en.wikibooks.org/wiki/Clojure_Programming/Concepts#List_Comprehension">http://en.wikibooks.org/wiki/Clojure_Programming/Concepts#List_Comprehension</a>
+</li>
+
+<li>Clojure core API: for macro<br />
+<a href="http://clojure.github.com/clojure/clojure.core-api.html#clojure.core/for">http://clojure.github.com/clojure/clojure.core-api.html#clojure.core/for</a>
+</li>
+
+<li>cirrus machina - The Clojure for macro<br />
+<a href="http://www.cirrusmachina.com/blog/comment/the-clojure-for-macro/">http://www.cirrusmachina.com/blog/comment/the-clojure-for-macro/</a>
+</li>
+
+<li>Riastradh's Lisp Style Rules<br />
+<a href="http://mumble.net/~campbell/scheme/style.txt">http://mumble.net/~campbell/scheme/style.txt</a>
+</li>
+
+<li>Dynamic Languages Strike Back<br />
+<a href="http://steve-yegge.blogspot.cz/2008/05/dynamic-languages-strike-back.html">http://steve-yegge.blogspot.cz/2008/05/dynamic-languages-strike-back.html</a>
+</li>
+
+<li>Scripting: Higher Level Programming for the 21st Century<br />
+<a href="http://www.tcl.tk/doc/scripting.html">http://www.tcl.tk/doc/scripting.html</a>
+</li>
+
+<li>Java Virtual Machine Support for Non-Java Languages<br />
+<a href="http://docs.oracle.com/javase/7/docs/technotes/guides/vm/multiple-language-support.html">http://docs.oracle.com/javase/7/docs/technotes/guides/vm/multiple-language-support.html</a>
+</li>
+
+<li>Třída java.lang.String<br />
+<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html">http://docs.oracle.com/javase/7/docs/api/java/lang/String.html</a>
+</li>
+
+<li>Třída java.lang.StringBuffer<br />
+<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/StringBuffer.html">http://docs.oracle.com/javase/7/docs/api/java/lang/StringBuffer.html</a>
+</li>
+
+<li>Třída java.lang.StringBuilder<br />
+<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/StringBuilder.html">http://docs.oracle.com/javase/7/docs/api/java/lang/StringBuilder.html</a>
+</li>
+
+<li>StringBuffer versus String<br />
+<a href="http://www.javaworld.com/article/2076072/build-ci-sdlc/stringbuffer-versus-string.html">http://www.javaworld.com/article/2076072/build-ci-sdlc/stringbuffer-versus-string.html</a>
+</li>
+
+<li>Threading macro (dokumentace k&nbsp;jazyku Clojure)<br />
+<a href="https://clojure.github.io/clojure/clojure.core-api.html#clojure.core/-&gt;">https://clojure.github.io/clojure/clojure.core-api.html#clojure.core/-&gt;</a>
+</li>
+
+<li>Understanding the Clojure -&gt; macro<br />
+<a href="http://blog.fogus.me/2009/09/04/understanding-the-clojure-macro/">http://blog.fogus.me/2009/09/04/understanding-the-clojure-macro/</a>
+</li>
+
+<li>clojure.inspector<br />
+<a href="http://clojure.github.io/clojure/clojure.inspector-api.html">http://clojure.github.io/clojure/clojure.inspector-api.html</a>
+</li>
+
+<li>The Clojure Toolbox<br />
+<a href="http://www.clojure-toolbox.com/">http://www.clojure-toolbox.com/</a>
+</li>
+
+<li>Unit Testing in Clojure<br />
+<a href="http://nakkaya.com/2009/11/18/unit-testing-in-clojure/">http://nakkaya.com/2009/11/18/unit-testing-in-clojure/</a>
+</li>
+
+<li>Testing in Clojure (Part-1: Unit testing)<br />
+<a href="http://blog.knoldus.com/2014/03/22/testing-in-clojure-part-1-unit-testing/">http://blog.knoldus.com/2014/03/22/testing-in-clojure-part-1-unit-testing/</a>
+</li>
+
+<li>API for clojure.test - Clojure v1.6 (stable)<br />
+<a href="https://clojure.github.io/clojure/clojure.test-api.html">https://clojure.github.io/clojure/clojure.test-api.html</a>
+</li>
+
+<li>Leiningen: úvodní stránka<br />
+<a href="http://leiningen.org/">http://leiningen.org/</a>
+</li>
+
+<li>Leiningen: Git repository<br />
+<a href="https://github.com/technomancy/leiningen">https://github.com/technomancy/leiningen</a>
+</li>
+
+<li>leiningen-win-installer<br />
+<a href="http://leiningen-win-installer.djpowell.net/">http://leiningen-win-installer.djpowell.net/</a>
+</li>
+
+<li>Clojure.org: Vars and the Global Environment<br />
+<a href="http://clojure.org/Vars">http://clojure.org/Vars</a>
+</li>
+
+<li>Clojure.org: Refs and Transactions<br />
+<a href="http://clojure.org/Refs">http://clojure.org/Refs</a>
+</li>
+
+<li>Clojure.org: Atoms<br />
+<a href="http://clojure.org/Atoms">http://clojure.org/Atoms</a>
+</li>
+
+<li>Clojure.org: Agents as Asynchronous Actions<br />
+<a href="http://clojure.org/agents">http://clojure.org/agents</a>
+</li>
+
+<li>Transient Data Structures
+<a href="http://clojure.org/transients">http://clojure.org/transients</a>
+</li>
+</ol>
+
+
+
+<p></p><p></p>
+<p><small>Autor: <a href="http://www.fit.vutbr.cz/~tisnovpa">Pavel Tišnovský</a> &nbsp; 2018</small></p>
+</body>
+</html>
+
