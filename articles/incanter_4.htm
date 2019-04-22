@@ -1,0 +1,1442 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+<title>Tvorba grafů v systému Incanter (pokračování)</title>
+<meta name="Author" content="Pavel Tisnovsky" />
+<meta name="Generator" content="vim" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<style type="text/css">
+         body {color:#000000; background:#ffffff;}
+         h1  {font-family: arial, helvetica, sans-serif; color:#ffffff; background-color:#c00000; text-align:center; padding-left:1em}
+         h2  {font-family: arial, helvetica, sans-serif; color:#ffffff; background-color:#0000c0; padding-left:1em; text-align:left}
+         h3  {font-family: arial, helvetica, sans-serif; color:#000000; background-color:#c0c0c0; padding-left:1em; text-align:left}
+         h4  {font-family: arial, helvetica, sans-serif; color:#000000; background-color:#e0e0e0; padding-left:1em; text-align:left}
+         a   {font-family: arial, helvetica, sans-serif;}
+         li  {font-family: arial, helvetica, sans-serif; color:#000000; text-align:justify; width:450px;}
+         ol  {font-family: arial, helvetica, sans-serif; color:#000000; text-align:justify; width:450px;}
+         ul  {font-family: arial, helvetica, sans-serif; color:#000000; text-align:justify; width:450px;}
+         p   {font-family: arial, helvetica, sans-serif; color:#000000; text-align:justify;}
+         pre {background:#e0e0e0}
+</style>
+</head>
+
+<body>
+
+<h1>Tvorba grafů v systému Incanter (pokračování)</h1>
+
+<h3>Pavel Tišnovský</h3>
+
+<p></p>
+
+<h1>Úvodník</h1>
+
+<p>Ve čtvrtém článku o systému Incanter budeme pokračovat tématem, kterému jsme se začali věnovat minule. Popíšeme si totiž způsob tvorby dalších typů grafů, které Incanter podporuje kromě již zmíněného sloupcového a spojnicového grafu.</p>
+
+
+
+<h2>Obsah</h2>
+
+<p><a href="#k01">1. Tvorba grafů v&nbsp;systému Incanter (pokračování)</a></p>
+<p><a href="#k02">2. Přidání druhé funkce do parametrického grafu</a></p>
+<p><a href="#k03">3. Použití uzávěrů pro zjednodušení deklarace funkcí pro parametrický graf</a></p>
+<p><a href="#k04">4. Graf tvořený množinou bodů [x, y]</a></p>
+<p><a href="#k05">5. Automatické řazení bodů podle jejich x-ové souřadnice</a></p>
+<p><a href="#k06">6. Lorenzův atraktor</a></p>
+<p><a href="#k07">7. Vykreslení Lorenzova atraktoru v&nbsp;ploše</a></p>
+<p><a href="#k08">8. Úplný zdrojový kód pro vykreslení Lorenzova atraktoru v&nbsp;ploše</a></p>
+<p><a href="#k09">9. Přidání bodů a úseček do grafu</a></p>
+<p><a href="#k10">10. Vykreslení jednoduchého histogramu</a></p>
+<p><a href="#k11">11. Vylepšený histogram</a></p>
+<p><a href="#k12">12. Teplotní mapa (heatmap)</a></p>
+<p><a href="#k13">13. Repositář s&nbsp;demonstračními příklady</a></p>
+<p><a href="#k14">14. Odkazy na předchozí části seriálu o jazyku Clojure</a></p>
+<p><a href="#k15">15. Odkazy na Internetu</a></p>
+
+
+
+<p><a name="k01"></a></p>
+<h2 id="k01">1. Tvorba grafů v&nbsp;systému Incanter (pokračování)</h2>
+
+<p>Ve čtvrté části miniseriálu o projektu <i>Incanter</i> navážeme <a
+href="https://www.root.cz/clanky/tvorba-jednoduchych-grafu-v-systemu-incanter/">na
+část předchozí</a>, v&nbsp;níž jsme si popsali tvorbu základních typů grafů.
+Především se jednalo o klasické sloupcové grafy, které mohou ve své
+nejjednodušší podobě zobrazit jedinou kategorii hodnot. Takový graf je zobrazen
+na prvním screenshotu pod tímto odstavcem:</p>
+
+<img src="https://i.iinfo.cz/images/22/incanter3a-6.png" class="image-344387" alt="&#160;" width="502" height="402" />
+<p><i>Obrázek 1: Sloupcový graf s&nbsp;jedinou kategorií (jak jste správně
+upozornili u předchozího článku, vstupem jsou sice celočíselné hodnoty, ovšem
+popiska y-ové osy obsahuje desetinná čísla).</i></p>
+
+<p>Sloupcové grafy ovšem mohou být i složitější, protože dokážou zobrazit větší
+množství kategorií. Opět si jen ve stručnosti ukažme, jak takový graf vypadá.
+Na tomto grafu jsou zobrazeny čtyři kategorie, z&nbsp;nichž každá odpovídá
+nějaké hodnotě pro zvolené roční období (jaro, léto, podzim, zima):</p>
+
+<img src="https://i.iinfo.cz/images/22/incanter3a-7.png" class="image-344388" alt="&#160;" width="502" height="402" />
+<p><i>Obrázek 2: Nepatrně složitější sloupcový graf se čtyřmi
+kategoriemi.</i></p>
+
+<p>Dalším typem grafu, se kterým jsme se minule setkali, jsou takzvané
+spojnicové grafy. I tyto grafy se používají pro zobrazení hodnot z&nbsp;jedné
+kategorie popř.&nbsp;z&nbsp;většího množství kategorií. Nejjednodušší graf
+tohoto typu je zobrazen na třetím screenshotu:</p>
+
+<img src="https://i.iinfo.cz/images/22/incanter3a-12.png" class="image-344393" alt="&#160;" width="502" height="402" />
+<p><i>Obrázek 3: Spojnicový graf.</i></p>
+
+<p>Pro vykreslení grafu s&nbsp;průběhem nějaké funkce je vhodnější namísto výše
+zmíněného liniového (spojnicového) grafu použít graf vytvořený funkcí
+<strong>function-plot</strong>. Jedním z&nbsp;důvodů vedoucích k&nbsp;použití
+tohoto typu grafu je snadnější manipulace s&nbsp;popisky os. Tento typ grafu
+jsme mj.&nbsp;použili pro zobrazení průběhu funkce sinc i její derivace. Navíc
+jsme do grafu ručně vložili ukazatele s&nbsp;popiskami zajímavých oblastí:</p>
+
+<img src="https://i.iinfo.cz/images/22/incanter3a-23.png" class="image-344404" alt="&#160;" width="502" height="402" />
+<p><i>Obrázek 4: Graf s&nbsp;průběhem funkce a její derivace s&nbsp;přidanými
+popisky.</i></p>
+
+<p>Dalším typem grafu, s&nbsp;nímž jsme se ve stručnosti seznámili minule, je
+parametrický graf. Ten dokáže vykreslit průběh funkce typu <i>x,y=f(t)</i>, což
+je ukázáno na dalším screenshotu:</p>
+
+<img src="https://i.iinfo.cz/images/493/incanter3b-2.png" class="image-344507" alt="&#160;" width="502" height="402" />
+<p><i>Obrázek 5: Lissajousův obrazec vykreslený s&nbsp;pomocí parametrického grafu.</i></p>
+
+<p>Ve skutečnosti mohou být parametrické grafy ještě složitější, takže si je
+podrobněji popíšeme v&nbsp;navazující kapitole.</p>
+
+
+
+<p><a name="k02"></a></p>
+<h2 id="k02">2. Přidání druhé funkce do parametrického grafu</h2>
+
+<p>Pro krátké zopakování si ukažme, jakým způsobem můžeme vykreslit graf se
+spirálou. Samotná spirála je definována ve funkci <strong>spiral</strong>:</p>
+
+<pre>
+(defn <strong>spiral</strong>
+    [t]
+    [(* t (cos t)) (* t (sin t))])
+</pre>
+
+<p>O vykreslení spirály v&nbsp;parametrickém grafu se postará funkce nazvaná
+<strong>parametric-plot</strong>:</p>
+
+<pre>
+(-&gt; (<strong>parametric-plot</strong> spiral 0 (* 6 Math/PI) :x-label "x" :y-label "y")
+    view)
+</pre>
+
+<p>Výsledek může vypadat následovně:</p>
+
+<img src="https://i.iinfo.cz/images/493/incanter3b-1.png" class="image-344506" alt="&#160;" width="502" height="402" />
+<p><i>Obrázek 6: Spirála vykreslená předchozím příkladem.</i></p>
+
+<p>Do grafu ovšem můžeme snadno přidat další průběh, například křivku tvořenou
+trajektorií rotujícího bodu, přičemž střed rotace se pohybuje po spirále.  Tato
+trajektorie je definována v&nbsp;další funkci (povšimněte si, že takto funkce
+opět vrací vektor s&nbsp;dvojicí souřadnic <strong>x</strong> a
+<strong>y</strong>):</p>
+
+<pre>
+(defn <strong>spiral-2</strong>
+    [t]
+    [(+ (* t (cos t))
+        (* 0.4 (sin (* 20 t))))
+     (+ (* t (sin t))
+        (* 0.4 (cos (* 20 t))))])
+</pre>
+
+<p>Nový průběh do parametrického grafu přidáme funkcí nazvanou
+<strong>add-parametric</strong>. Tato funkce vrací modifikovaný objekt
+představující graf, takže je možné v&nbsp;případě potřeby přidat i třetí
+popř.&nbsp;další průběh:</p>
+
+<pre>
+(-&gt; (parametric-plot spiral 0 (* 6 Math/PI) :x-label "x" :y-label "y")
+    (<strong>add-parametric spiral-2</strong> 0 (* 6 Math/PI))
+    view)
+</pre>
+
+<img src="https://i.iinfo.cz/images/172/incanter4-1.png" class="image-344851" alt="&#160;" width="502" height="402" />
+<p><i>Obrázek 6: Parametrický graf se zobrazením průběhů dvou parametrických
+funkcí.</i></p>
+
+
+
+<p><a name="k03"></a></p>
+<h2 id="k03">3. Použití uzávěrů pro zjednodušení deklarace funkcí pro parametrický graf</h2>
+
+<p>Jen pro zajímavost si ukažme, jakým způsobem si můžeme zjednodušit deklaraci
+funkcí, které mají stejný tvar (zápis), ovšem liší se hodnotou nějakého
+parametru, který je při vykreslování konstantní. Představme si například, že
+budeme chtít vykreslovat různé tvary založené na Lissajousových obrazcích
+zmíněných minule. V&nbsp;programovacím jazyku Clojure (ale samozřejmě nejenom
+v&nbsp;něm) je možné pro tento účel použít <i>uzávěry</i>
+(<i>clo<strong>s</strong>ure</i>), což jsou funkce (typicky anonymní), které na
+sebe mají navázánu alespoň jednu tzv.&nbsp;<i>volnou proměnnou</i>. Uzávěr
+sloužící pro generování funkcí, které se mají vykreslit, se v&nbsp;Clojure
+vytvoří překvapivě snadno:</p>
+
+<pre>
+(defn <strong>generate-shape-function</strong>
+    [xt yt]
+    (fn [t]
+        [(cos (* t xt))
+         (sin (* t yt))]))
+</pre>
+
+<p>Díky tomuto &bdquo;konstruktoru funkcí&ldquo; si můžeme nechat vygenerovat
+další tři funkce, které již budou akceptovat jediný parametr <strong>t</strong>
+a každá z&nbsp;nich na sebe bude mít navázána odlišné hodnoty
+<strong>xt</strong> a <strong>yt</strong>:</p>
+
+<pre>
+(def <strong>shape-1</strong>
+    (generate-shape-function 1 2))
+&nbsp;
+(def <strong>shape-2</strong>
+    (generate-shape-function 2 1))
+&nbsp;
+(def <strong>shape-3</strong>
+    (generate-shape-function 1/3 3/2))
+</pre>
+
+<p>Všechny tři takto vytvořené funkce si můžeme nechat vykreslit:</p>
+
+<pre>
+(-&gt; (parametric-plot shape-1 0 (* 2 Math/PI) :x-label "x" :y-label "y")
+    view)
+&nbsp;
+(-&gt; (parametric-plot shape-2 0 (* 2 Math/PI) :x-label "x" :y-label "y")
+    view)
+&nbsp;
+(-&gt; (parametric-plot shape-3 0 (* 2 Math/PI) :x-label "x" :y-label "y")
+    view)
+</pre>
+
+<img src="https://i.iinfo.cz/images/172/incanter4-2.png" class="image-344852" alt="&#160;" width="502" height="402" />
+<p><i>Obrázek 7: Průběh parametrické funkce <strong>shape-1</strong>.</i></p>
+
+<img src="https://i.iinfo.cz/images/172/incanter4-3.png" class="image-344853" alt="&#160;" width="502" height="402" />
+<p><i>Obrázek 8: Průběh parametrické funkce <strong>shape-2</strong>.</i></p>
+
+<img src="https://i.iinfo.cz/images/172/incanter4-4.png" class="image-344854" alt="&#160;" width="502" height="402" />
+<p><i>Obrázek 9: Průběh parametrické funkce <strong>shape-3</strong>.</i></p>
+
+<p>A samozřejmě nám nic nebrání si nechat vykreslit všechny tři průběhy do
+jediného grafu:</p>
+
+<pre>
+(-&gt; (parametric-plot shape-1 0 (* 2 Math/PI) :x-label "x" :y-label "y")
+    (add-parametric shape-2 0 (* 2 Math/PI))
+    (add-parametric shape-3 0 (* 2 Math/PI))
+    view)
+</pre>
+
+<img src="https://i.iinfo.cz/images/172/incanter4-5.png" class="image-344855" alt="&#160;" width="502" height="402" />
+<p><i>Obrázek 10: Všech tří funkcí <strong>shape-1</strong>,
+<strong>shape-2</strong> a <strong>shape-3</strong>.</i></p>
+
+
+
+<p><a name="k04"></a></p>
+<h2 id="k04">4. Graf tvořený množinou bodů [x, y]</h2>
+
+<p>Minule popsané liniové (spojnicové) grafy byly určeny pro zobrazení série
+hodnot. Tyto grafy byly doplněny možností zobrazení průběhu funkce, a to bez
+nutnosti explicitního výpočtu jednotlivých hodnot pro graf. Podobně je tomu u
+výše zmíněných parametrických grafů (určených pro vykreslení průběhu funkce),
+k&nbsp;nimž existuje jako alternativa takzvaný <i>xy-graf</i> sloužící pro
+vykreslení série bodů v&nbsp;rovině popř.&nbsp;série bodů pospojovaných
+úsečkami. Podívejme se nejprve na zcela nejjednodušší příklad, v&nbsp;němž
+vykreslíme sérii bodů [x,y], přičemž hodnoty <strong>x</strong> budou
+generovány standardní funkcí <strong>range</strong> a hodnoty
+<strong>y</strong> se z&nbsp;první sekvence vypočítají aplikací funkce
+<strong>sin</strong> (v&nbsp;tomto případě se jedná o rozšíření Incanteru,
+který dokáže aplikovat funkci na všechny prvky sekvence):</p>
+
+<pre>
+(def x (range 0 (* 2 Math/PI) 0.1))
+(def y (sin x))
+&nbsp;
+(-&gt; (<strong>xy-plot</strong> x y)
+    view)
+</pre>
+
+<p>Výsledek bude vypadat podle očekávání:</p>
+
+<img src="https://i.iinfo.cz/images/172/incanter4-6.png" class="image-344856" alt="&#160;" width="502" height="402" />
+<p><i>Obrázek 11: Vykreslení série bodů [x,y] propojených úsečkami.</i></p>
+
+<p><div class="rs-tip-major">Poznámka: ve skutečnosti je ovšem chování grafu
+<strong>xy-plot</strong> poněkud složitější, což si vysvětlíme
+v&nbsp;navazující kapitole.</div></p>
+
+
+
+<p><a name="k05"></a></p>
+<h2 id="k05">5. Automatické řazení bodů podle jejich x-ové souřadnice</h2>
+
+<p>V&nbsp;předchozím příkladu se podle očekávání vykreslila sinusovka, takže by
+se mohlo zdát, že funkce <strong>xy-plot</strong> jednoduše vykreslí sekvenci
+bodů [x,y] v&nbsp;takovém pořadí, v&nbsp;jakém je získá na vstupu. Ve
+skutečnosti tomu tak ovšem implicitně není, o čemž se velmi snadno přesvědčíme
+při pokusu o vykreslení kružnice. První verze příkladu pro vykreslení kružnice
+s&nbsp;využitím <strong>xy-grafu</strong> by mohla vypadat následovně:</p>
+
+<pre>
+(def t (range 0 (* 2 Math/PI) 0.1))
+(def x (cos t))
+(def y (sin t))
+&nbsp;
+(-&gt; (<strong>xy-plot</strong> x y)
+    view)
+</pre>
+
+<p>Výsledek bude přinejmenším překvapující:</p>
+
+<img src="https://i.iinfo.cz/images/172/incanter4-7.png" class="image-344857" alt="&#160;" width="502" height="402" />
+<p><i>Obrázek 12: Výsledek prvního pokusu o vykreslení kružnice.</i></p>
+
+<p>Při pohledu na předchozí screenshot vás možná napadlo, kde problém vznikl:
+Incanter seřadil obě sekvence podle x-ové souřadnice, takže na přeskáčku
+vykresloval horní a spodní oblouk kružnice. U sinusovky jsme si toho nevšimli,
+protože hodnoty <strong>x</strong> byly rostoucí.</p>
+
+<p>Oprava předchozího příkladu je jednoduchá &ndash; postačuje výchozí řazení
+zakázat volitelným parametrem pojmenovaným <strong>:auto-sort</strong>, kterému
+předáme hodnotu <strong>false</strong> nebo <strong>nil</strong>:</p>
+
+<pre>
+(def t (range 0 (* 2 Math/PI) 0.1))
+(def x (cos t))
+(def y (sin t))
+&nbsp;
+(-&gt; (<strong>xy-plot</strong> x y <strong>:auto-sort false</strong>)
+    view)
+</pre>
+
+<img src="https://i.iinfo.cz/images/172/incanter4-8.png" class="image-344858" alt="&#160;" width="502" height="402" />
+<p><i>Obrázek 13: Výsledek druhého pokusu o vykreslení kružnice.</i></p>
+
+
+
+<p><a name="k06"></a></p>
+<h2 id="k06">6. Lorenzův atraktor</h2>
+
+<p>Poměrně vděčným příkladem funkce zobrazené ve 2D nebo dokonce ve 3D prostoru
+je dynamický systém s&nbsp;takzvaným <i>podivným atraktorem</i>, který je
+pojmenovaný <i>Lorenzův atraktor</i> podle svého objevitele. Tento systém
+sestávající ze tří dynamických rovnic použil Edward Lorenz v&nbsp;roce 1963 při
+simulaci vývoje počasí (resp.&nbsp;ve velmi zjednodušeném modelu počasí). Na
+tomto systému byla také numericky a analyticky ověřena velká citlivost na
+počáteční podmínky (někdy také nazývaná &bdquo;motýlí efekt&ldquo;). Pro
+upřesnění je však nutné říci, že při simulaci na počítači vlastně získáme
+atraktor, jenž je periodický. Je to z&nbsp;toho důvodu, že pro zobrazení
+číselných hodnot je použito konečného počtu bitů, z&nbsp;toho nutně vyplývá, že
+se po určitém počtu kroků (který je však obrovský, takže tento jev mnohdy
+nezaregistrujeme) začne dráha Lorenzova atraktoru překrývat. V&nbsp;matematicky
+přesném modelu však tato situace nenastane, každá smyčka funkce bude mít
+unikátní tvar a dráhy se nebudou překrývat, pouze protínat. Diferenciální
+rovnice Lorenzova atraktoru mají po převodu na diferenční tvar následující
+formát:</p>
+
+<pre>
+dx/dt = &sigma; (y-x)
+dy/dt = x(&rho; - z) - y
+dz/dt = xy - &Beta;z
+</pre>
+
+<p>Takže pro iterativní (samozřejmě že nepřesný) výpočet můžeme pracovat
+s&nbsp;následujícími vztahy, které pro dostatečně malé <i>dt</i> vedou
+k&nbsp;výpočtu bodů ležících na Lorenzově atraktoru:</p>
+
+<p>
+x<sub>n+1</sub> = x<sub>n</sub> + (&sigma; (y-x)) dt<br />
+y<sub>n+1</sub> = y<sub>n</sub> + (x(&rho; - z) - y) dt<br />
+z<sub>n+1</sub> = z<sub>n</sub> + (xy - &Beta;z) dt
+</p>
+
+<img src="https://i.iinfo.cz/images/172/incanter4-9.png" class="image-344859" alt="&#160;" width="502" height="402" />
+<p><i>Obrázek 14: Lorenzův atraktor vykreslený ve 3D grafu s&nbsp;využitím
+knihovny Matplotlib.</i></p>
+
+
+
+<p><a name="k07"></a></p>
+<h2 id="k07">7. Vykreslení Lorenzova atraktoru v&nbsp;ploše</h2>
+
+<p>O vykreslení Lorenzova atraktoru se samozřejmě můžeme pokusit i
+v&nbsp;systému Incanter. Zvolíme přitom funkcionální způsob výpočtu,
+v&nbsp;němž využijeme funkci vyššího řádu nazvanou jednoduše
+<strong>iterate</strong>. Této funkci se předá jiná funkce <i>f</i> a počáteční
+parametry této funkce. Funkce <i>f</i> se s&nbsp;těmito parametry zavolá a
+výsledek (vektor) se znovu použije pro volání funkce <i>f</i> atd. atd.
+Mezivýsledky výpočtu jsou současně výslednou hodnotou funkce
+<strong>iterate</strong>. Ovšem <strong>iterate</strong> ve skutečnosti vrací
+<i>nekonečnou</i> a současně i <i>línou sekvenci</i>, což znamená, že se
+zmíněná funkce <i>f</i> bude volat jen ve chvíli, kdy skutečně budeme
+potřebovat využít její výsledky. Celý výpočet je založen na
+<strong>next-values</strong>, tj.&nbsp;funkce pro výpočet jedné iterace
+Lorenzova atraktoru na základě rovnic z&nbsp;předchozí kapitoly:</p>
+
+<pre>
+(defn <strong>next-values</strong>
+    [[x y z]]
+    (let [xd (* s (- y x))
+          yd (- (* r x) y (* x z))
+          zd (- (* x y) (* b z))]
+         [(+ x (* xd dt))
+          (+ y (* yd dt))
+          (+ z (* zd dt))]))
+</pre>
+
+<p><div class="rs-tip-major">Poznámka: povšimněte si, jak se dá elegantně
+přistupovat k&nbsp;prvkům vektoru, který je jediným parametrem této
+funkce.</div></p>
+
+<p>Výpočet nekonečné lazy sekvence se <i>všemi body</i> Lorenzova
+atraktoru:</p>
+
+<pre>
+(def lorenz (<strong>iterate next-values</strong> [0.0, 1.0, 1.05]))
+</pre>
+
+<p>Ve skutečnosti však samozřejmě musíme pracovat jen s&nbsp;konečným počtem
+hodnot, které získáme například funkcí <strong>take</strong>:</p>
+
+<pre>
+(def values (<strong>take n</strong> lorenz))
+</pre>
+
+<p>Zbývá již jen získat x-ové souřadnice a y-ové souřadnice:</p>
+
+<pre>
+(def x (map first values))
+&nbsp;
+(def y (map second values))
+</pre>
+
+<p>Které již následně umíme vykreslit:</p>
+
+<pre>
+(-&gt; (xy-plot x y :auto-sort false)
+    view)
+</pre>
+
+<img src="https://i.iinfo.cz/images/172/incanter4-10.png" class="image-344860" alt="&#160;" width="502" height="402" />
+<p><i>Obrázek 15: Lorenzův atraktor vykreslený podle předchozího postupu
+knihovnou Incanter.</i></p>
+
+
+
+<p><a name="k08"></a></p>
+<h2 id="k08">8. Úplný zdrojový kód pro vykreslení Lorenzova atraktoru v&nbsp;ploše</h2>
+
+<p>Pro úplnost následuje výpis úplného zdrojového kódu určeného pro vykreslení
+Lorenzova atraktoru v&nbsp;ploše podle popisu uvedeného v&nbsp;předchozí
+kapitole:</p>
+
+<pre>
+(ns xy-plot-lorenz
+  (:use (incanter core stats charts svg)))
+&nbsp;
+&nbsp;
+(def <strong>s</strong> 10)
+(def <strong>r</strong> 28)
+(def <strong>b</strong> 2.667)
+&nbsp;
+<i>; krok (změna času)</i>
+(def <strong>dt</strong> 0.01)
+&nbsp;
+<i>; celkový počet vypočtených bodů na Lorenzově atraktoru</i>
+(def <strong>n</strong> 10000)
+&nbsp;
+<i>; funkce pro výpočet dalšího bodu Lorenzova atraktoru</i>
+(defn <strong>next-values</strong>
+    [[x y z]]
+    (let [xd (* s (- y x))
+          yd (- (* r x) y (* x z))
+          zd (- (* x y) (* b z))]
+         [(+ x (* xd dt))
+          (+ y (* yd dt))
+          (+ z (* zd dt))]))
+&nbsp;
+<i>; vlastní výpočet atraktoru -&gt; nekonečná lazy sekvence</i>
+(def <strong>lorenz</strong> (iterate next-values [0.0, 1.0, 1.05]))
+&nbsp;
+<i>; vykreslovat budeme jen konečný počet bodů</i>
+(def <strong>values</strong> (take n lorenz))
+&nbsp;
+<i>; x-ové souřadnice</i>
+(def <strong>x</strong> (map first values))
+&nbsp;
+<i>; y-ové souřadnice</i>
+(def <strong>y</strong> (map second values))
+&nbsp;
+<i>; vykreslení a zobrazení grafu</i>
+(-&gt; (<strong>xy-plot</strong> x y :auto-sort false)
+    view)
+</pre>
+
+
+
+<p><a name="k09"></a></p>
+<h2 id="k09">9. Přidání bodů a úseček do grafu</h2>
+
+<p>Velmi snadno můžeme do existujícího grafu typu <strong>xy</strong> přidat
+další sérii bodů, které mohou být skutečně vykresleny jako izolované body nebo
+mohou být spojeny úsečkami (což již známe z&nbsp;předchozích kapitol).
+Předchozí příklad si můžeme zobecnit a ukázat si, jak Lorenzův atraktor reaguje
+na situaci, kdy má nepatrně odlišné počáteční podmínky:</p>
+
+<pre>
+(ns xy-plot-lorenz
+  (:use (incanter core stats charts svg)))
+&nbsp;
+&nbsp;
+(def s 10)
+(def r 28)
+(def b 2.667)
+&nbsp;
+<i>; krok (změna času)</i>
+(def dt 0.01)
+&nbsp;
+<i>; celkový počet vypočtených bodů na Lorenzově atraktoru</i>
+(def n 2000)
+&nbsp;
+<i>; funkce pro výpočet dalšího bodu Lorenzova atraktoru</i>
+(defn next-values
+    [[x y z]]
+    (let [xd (* s (- y x))
+          yd (- (* r x) y (* x z))
+          zd (- (* x y) (* b z))]
+         [(+ x (* xd dt))
+          (+ y (* yd dt))
+          (+ z (* zd dt))]))
+&nbsp;
+(defn compute-lorenz-attractor
+    [x0 y0 z0 n]
+    (let [lorenz (iterate next-values [x0 y0 z0])
+          values (take n lorenz)]
+          values))
+&nbsp;
+(defn x-vals
+    [coordinates]
+    (map first coordinates))
+&nbsp;
+(defn y-vals
+    [coordinates]
+    (map second coordinates))
+&nbsp;
+<i>; dva atraktory, které se nepatrně liší počáteční podmínku</i>
+(def attractor1 (compute-lorenz-attractor 0.0 1.0 1.05 n))
+(def attractor2 (compute-lorenz-attractor 0.01 1.0 1.05 n))
+&nbsp;
+<i>; vykreslení a zobrazení grafu</i>
+(-&gt; (xy-plot   (x-vals attractor1) (y-vals attractor1) :auto-sort false)
+    (add-lines (x-vals attractor2) (y-vals attractor2) :auto-sort false)
+    view)
+</pre>
+
+<p>Pokud budou body druhého průběhu spojeny úsečkami, získáme tento výsledek:</p>
+
+<img src="https://i.iinfo.cz/images/172/incanter4-11.png" class="image-344861" alt="&#160;" width="502" height="402" />
+<p><i>Obrázek 16: Dva Lorenzovy atraktory, které mají nepatrně odlišné
+počáteční podmínky.</i></p>
+
+<p>Ovšem můžeme si taktéž nechat vykreslit pouze body a nespojovat je
+úsečkami:</p>
+
+<img src="https://i.iinfo.cz/images/172/incanter4-12.png" class="image-344862" alt="&#160;" width="502" height="402" />
+<p><i>Obrázek 17: Druhý průběh je vykreslen pouze jako série bodů bez spojení
+úsečkami.</i></p>
+
+
+
+<p><a name="k10"></a></p>
+<h2 id="k10">10. Vykreslení jednoduchého histogramu</h2>
+
+<p>Dalším typem grafu, který je možné při použití knihovny <i>incanter</i>
+použít, je histogram. Ten se vykresluje funkcí pojmenovanou logicky
+<strong>histogram</strong>. Povinným parametrem jsou podle očekávání data,
+která se mají do histogramu vykreslit, ovšem funkce <strong>histogram</strong>
+podporuje i další nepovinné parametry, zejména parametr pojmenovaný
+<strong>:density</strong> řídicí normalizaci histogramu. Dalším mnohdy
+důležitým nepovinným parametrem je <strong>:nbins</strong>, jehož hodnotou se
+řídí šířka intervalů (tříd), tj.&nbsp;nepřímo počet sloupců v&nbsp;histogramu.
+Podívejme se na způsob vykreslení histogramu pro zobrazení frekvence součtu
+hodnot po hodu tří kostek. Výsledek by se měl (velmi zhruba) blížit normálnímu
+rozložení:</p>
+
+<pre>
+(ns histogram-A
+  (:use (incanter core stats charts svg)))
+&nbsp;
+(def hody-kostkou   (take 5000 (repeatedly #(inc (rand-int 6)))))
+(def hody-kostkou-2 (take 5000 (repeatedly #(inc (rand-int 6)))))
+(def hody-kostkou-3 (take 5000 (repeatedly #(inc (rand-int 6)))))
+&nbsp;
+(view (histogram (map #(+ %1 %2 %3) hody-kostkou hody-kostkou-2 hody-kostkou-3)))
+</pre>
+
+<p>Histogram zobrazuje ve výchozím nastavení pouze deset tříd, což je při
+vizualizaci hodů kostkou málo (ideálně potřebujeme zobrazit frekvence součtů
+pro hodnoty 3 až 18:</p>
+
+<img src="https://i.iinfo.cz/images/172/incanter4-13.png" class="image-344863" alt="&#160;" width="502" height="402" />
+<p><i>Obrázek 18: Základní histogram s&nbsp;deseti intervaly (třídami).</i></p>
+
+<p>Počet tříd můžeme zvýšit na osmnáct následujícím způsobem:</p>
+
+<pre>
+(view (histogram (map #(+ %1 %2 %3) hody-kostkou hody-kostkou-2 hody-kostkou-3) <strong>:nbins 18</strong>))
+</pre>
+
+<p>Povšimněte si, že výsledek příliš neodpovídá očekávání, protože
+v&nbsp;některých intervalech nemáme (vlivem rozdělení) žádnou hodnotu. Tato
+situace pravděpodobně nemá při použití funkce <strong>histogram</strong> žádné
+rozumné řešení:</p>
+
+<img src="https://i.iinfo.cz/images/172/incanter4-14.png" class="image-344864" alt="&#160;" width="502" height="402" />
+<p><i>Obrázek 19: Histogram s&nbsp;osmnácti třídami.</i></p>
+
+
+
+<p><a name="k11"></a></p>
+<h2 id="k11">11. Vylepšený histogram</h2>
+
+<p>Funkce <strong>histogram</strong> použitá v&nbsp;předchozí kapitole má i
+další nepříjemné chování a především není příliš konfigurovatelná. Pokud budete
+chtít s&nbsp;histogramy pracovat častěji, může být výhodnější použít řešení
+popsané na stránce <a
+href="https://stackoverflow.com/questions/27991054/center-incanter-histogram-x-axis-tick-marks-directly-underneath-bars#27992128">https://stackoverflow.com/questions/27991054/center-incanter-histogram-x-axis-tick-marks-directly-underneath-bars#27992128</a>,
+kde je histogram nejprve spočítán a potom vykreslen pomocí běžného sloupcového
+grafu. Ukažme si tedy, jak je možné zobrazit výsledek hodů třemi kostkami
+lepším způsobem:</p>
+
+<pre>
+(ns histogram-A
+  (:use (incanter core stats charts svg)))
+&nbsp;
+(def hody-kostkou   (take 5000 (repeatedly #(inc (rand-int 6)))))
+(def hody-kostkou-2 (take 5000 (repeatedly #(inc (rand-int 6)))))
+(def hody-kostkou-3 (take 5000 (repeatedly #(inc (rand-int 6)))))
+&nbsp;
+(defn bar-chart-histogram
+    [values]
+    (let [freq (frequencies values)
+          f    #(freq % 0)
+          ks   (keys freq)
+          a    (apply min ks)
+          b    (apply max ks)
+          x-values (range a (inc b))
+          x-labels (map str x-values)
+          y-values (map f x-values)]
+      (bar-chart x-labels y-values)))
+&nbsp;
+(view (bar-chart-histogram (map #(+ %1 %2 %3) hody-kostkou hody-kostkou-2 hody-kostkou-3)))
+</pre>
+
+<img src="https://i.iinfo.cz/images/172/incanter4-15.png" class="image-344865" alt="&#160;" width="502" height="402" />
+<p><i>Obrázek 20: Výsledek hodů třemi kostkami zobrazený ve vylepšeném histogramu.</i></p>
+
+
+
+<p><a name="k12"></a></p>
+<h2 id="k12">12. Teplotní mapa (heatmap)</h2>
+
+<p>V&nbsp;případě, že je nutné nějakým způsobem zobrazit funkci typu
+<strong>z=f(x,y)</strong>, je nutné použít buď nějakou formu 3D grafu nebo
+takzvanou teplotní mapu (<i>heat map, heatmap</i>). I ta je v&nbsp;systému
+Incanter podporována, o čemž se můžeme snadno přesvědčit:</p>
+
+<pre>
+(ns heat-map-chart
+  (:use (incanter core stats charts svg)))
+&nbsp;
+(defn f
+    [x y]
+    (sin (sqrt (plus (sq x) (sq y)))))
+</pre>
+
+<p>Zobrazení průběhu funkce <strong>f</strong> pro rozsah x=(-10..10) a
+y=(-15..15) provedeme takto:</p>
+
+<pre>
+(view (<strong>heat-map</strong> f -10 10 -15 15))
+</pre>
+
+<img src="https://i.iinfo.cz/images/172/incanter4-16.png" class="image-344866" alt="&#160;" width="502" height="402" />
+<p><i>Obrázek 21: Teplotní mapa zobrazená výchozím algoritmem.</i></p>
+
+<p>Pěknější je, alespoň podle mého názoru, vypnutí barvové palety a zobrazení
+teplotní mapy pouze v&nbsp;odstínech šedi (problém spočívá v&nbsp;tom, jak se
+mapují barvy z&nbsp;výchozí barvové palety Incanteru). Výsledek s&nbsp;teplotní
+mapou ve stupních šedi může vypadat následovně:</p>
+
+<pre>
+(view (<strong>heat-map</strong> f -10 10 -10 10 :color? false))
+</pre>
+
+<img src="https://i.iinfo.cz/images/172/incanter4-17.png" class="image-344867" alt="&#160;" width="502" height="402" /></p>
+<p><i>Obrázek 22: Mnohem hezčí je použití odstínů šedi.</i></p>
+
+<p><div class="rs-tip-major">Poznámka: pokud budete potřebovat pracovat
+s&nbsp;grafy častěji a pokud máte větší požadavky na jejich modifikaci, je
+pravděpodobně lepší použít Matplotlib a tudíž Python, popř.&nbsp;systém R. O
+Matplotlibu jsem se zmiňoval na &bdquo;konkurenčním&ldquo; serveru
+mojefedora.cz, ovšem rozšířená verze těchto článků pravděpodobně vyjde i zde na
+Rootu.</div></p>
+
+
+
+<p><a name="k13"></a></p>
+<h2 id="k13">13. Repositář s&nbsp;demonstračními příklady</h2>
+
+<p>Zdrojové kódy všech dnes popsaných demonstračních příkladů byly uloženy do
+Git repositáře dostupného na adrese <a
+href="https://github.com/tisnik/incanter-examples">https://github.com/tisnik/incanter-examples</a>
+(stále na GitHubu :-). V&nbsp;případě, že nebudete chtít klonovat celý
+repositář (ten je ovšem stále velmi malý, dnes má doslova několik kilobajtů),
+můžete namísto toho použít odkazy na jednotlivé příklady, které naleznete
+v&nbsp;následující tabulce:</p>
+
+<table>
+<tr><th>#</th><th>Demonstrační příklad</th><th>Popis</th><th>Cesta</th></tr>
+<tr><td>1</td><td>01_parametric_plot_A.clj</td><td>parametrická funkce</td><td><a href="https://github.com/tisnik/incanter-examples/blob/master/incanter-4/01_parametric_plot_A.clj">https://github.com/tisnik/incanter-examples/blob/master/incanter-4/01_parametric_plot_A.clj</a></td></tr>
+<tr><td>2</td><td>02_parametric_plot_B.clj</td><td>parametrická funkce</td><td><a href="https://github.com/tisnik/incanter-examples/blob/master/incanter-4/02_parametric_plot_B.clj">https://github.com/tisnik/incanter-examples/blob/master/incanter-4/02_parametric_plot_B.clj</a></td></tr>
+<tr><td>3</td><td>03_xy_plot.clj</td><td>graf z bodů propojených úsečkami</td><td><a href="https://github.com/tisnik/incanter-examples/blob/master/incanter-4/03_xy_plot.clj">https://github.com/tisnik/incanter-examples/blob/master/incanter-4/03_xy_plot.clj</a></td></tr>
+<tr><td>4</td><td>04_Lorenz_attractor_A.clj</td><td>Lorenzův atraktor, první varianta</td><td><a href="https://github.com/tisnik/incanter-examples/blob/master/incanter-4/04_Lorenz_attractor_A.clj">https://github.com/tisnik/incanter-examples/blob/master/incanter-4/04_Lorenz_attractor_A.clj</a></td></tr>
+<tr><td>5</td><td>05_Lorenz_attractor_B.clj</td><td>Lorenzův atraktor, druhá varianta</td><td><a href="https://github.com/tisnik/incanter-examples/blob/master/incanter-4/05_Lorenz_attractor_B.clj">https://github.com/tisnik/incanter-examples/blob/master/incanter-4/05_Lorenz_attractor_B.clj</a></td></tr>
+<tr><td>6</td><td>06_Lorenz_attractor_C.clj</td><td>Lorenzův atraktor, třetí varianta</td><td><a href="https://github.com/tisnik/incanter-examples/blob/master/incanter-4/06_Lorenz_attractor_C.clj">https://github.com/tisnik/incanter-examples/blob/master/incanter-4/06_Lorenz_attractor_C.clj</a></td></tr>
+<tr><td>7</td><td>07_histogram_A.clj</td><td>histogram vykreslený standardní funkcí</td><td><a href="https://github.com/tisnik/incanter-examples/blob/master/incanter-4/07_histogram_A.clj">https://github.com/tisnik/incanter-examples/blob/master/incanter-4/07_histogram_A.clj</a></td></tr>
+<tr><td>8</td><td>08_histogram_B.clj</td><td>vylepšené vykreslení histogramu</td><td><a href="https://github.com/tisnik/incanter-examples/blob/master/incanter-4/08_histogram_B.clj">https://github.com/tisnik/incanter-examples/blob/master/incanter-4/08_histogram_B.clj</a></td></tr>
+<tr><td>9</td><td>09_heat_map.clj</td><td>teplotní mapa</td><td><a href="https://github.com/tisnik/incanter-examples/blob/master/incanter-4/09_heat_map.clj">https://github.com/tisnik/incanter-examples/blob/master/incanter-4/09_heat_map.clj</a></td></tr>
+<table>
+
+
+
+<p><a name="k14"></a></p>
+<h2 id="k14">14. Odkazy na předchozí části seriálu o programovacím jazyku Clojure</h2>
+
+<ol>
+
+<li>Clojure  1: Úvod<br />
+<a href="http://www.root.cz/clanky/clojure-aneb-jazyk-umoznujici-tvorbu-bezpecnych-vicevlaknovych-aplikaci-pro-jvm/">http://www.root.cz/clanky/clojure-aneb-jazyk-umoznujici-tvorbu-bezpecnych-vicevlaknovych-aplikaci-pro-jvm/</a>
+</li>
+
+<li>Clojure  2: Symboly, kolekce atd.<br />
+<a href="http://www.root.cz/clanky/clojure-aneb-jazyk-umoznujici-tvorbu-bezpecnych-vicevlaknovych-aplikaci-pro-jvm-2-cast/">http://www.root.cz/clanky/clojure-aneb-jazyk-umoznujici-tvorbu-bezpecnych-vicevlaknovych-aplikaci-pro-jvm-2-cast/</a>
+</li>
+
+<li>Clojure  3: Funkcionální programování<br />
+<a href="http://www.root.cz/clanky/clojure-aneb-jazyk-umoznujici-tvorbu-bezpecnych-vicevlaknovych-aplikaci-pro-jvm-3-cast-funkcionalni-programovani/">http://www.root.cz/clanky/clojure-aneb-jazyk-umoznujici-tvorbu-bezpecnych-vicevlaknovych-aplikaci-pro-jvm-3-cast-funkcionalni-programovani/</a>
+</li>
+
+<li>Clojure  4: Kolekce, sekvence a lazy sekvence<br />
+<a href="http://www.root.cz/clanky/clojure-aneb-jazyk-umoznujici-tvorbu-bezpecnych-vicevlaknovych-aplikaci-pro-jvm-4-cast-kolekce-sekvence-a-lazy-sekvence/">http://www.root.cz/clanky/clojure-aneb-jazyk-umoznujici-tvorbu-bezpecnych-vicevlaknovych-aplikaci-pro-jvm-4-cast-kolekce-sekvence-a-lazy-sekvence/</a>
+</li>
+
+<li>Clojure  5: Sekvence, lazy sekvence a paralelní programy<br />
+<a href="http://www.root.cz/clanky/clojure-a-bezpecne-aplikace-pro-jvm-sekvence-lazy-sekvence-a-paralelni-programy/">http://www.root.cz/clanky/clojure-a-bezpecne-aplikace-pro-jvm-sekvence-lazy-sekvence-a-paralelni-programy/</a>
+</li>
+
+<li>Clojure  6: Podpora pro paralelní programování<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-6-futures-nejsou-jen-financni-derivaty/">http://www.root.cz/clanky/programovaci-jazyk-clojure-6-futures-nejsou-jen-financni-derivaty/</a>
+</li>
+
+<li>Clojure  7: Další funkce pro paralelní programování<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-7-dalsi-podpurne-prostredky-pro-paralelni-programovani/">http://www.root.cz/clanky/programovaci-jazyk-clojure-7-dalsi-podpurne-prostredky-pro-paralelni-programovani/</a>
+</li>
+
+<li>Clojure  8: Identity, stavy, neměnné hodnoty a reference<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-8-identity-stavy-nemenne-hodnoty-a-referencni-typy/">http://www.root.cz/clanky/programovaci-jazyk-clojure-8-identity-stavy-nemenne-hodnoty-a-referencni-typy/</a>
+</li>
+
+<li>Clojure  9: Validátory, pozorovatelé a kooperace s Javou<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-9-validatory-pozorovatele-a-kooperace-mezi-clojure-a-javou/">http://www.root.cz/clanky/programovaci-jazyk-clojure-9-validatory-pozorovatele-a-kooperace-mezi-clojure-a-javou/</a>
+</li>
+
+<li>Clojure 10: Kooperace mezi Clojure a Javou<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-10-kooperace-mezi-clojure-a-javou-pokracovani/">http://www.root.cz/clanky/programovaci-jazyk-clojure-10-kooperace-mezi-clojure-a-javou-pokracovani/</a>
+</li>
+
+<li>Clojure 11: Generátorová notace seznamu/list comprehension<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-11-generatorova-notace-seznamu-list-comprehension/">http://www.root.cz/clanky/programovaci-jazyk-clojure-11-generatorova-notace-seznamu-list-comprehension/</a>
+</li>
+
+<li>Clojure 12: Překlad programů z Clojure do bajtkódu JVM I:<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-12-preklad-programu-z-clojure-do-bajtkodu-jvm/">http://www.root.cz/clanky/programovaci-jazyk-clojure-12-preklad-programu-z-clojure-do-bajtkodu-jvm/</a>
+</li>
+
+<li>Clojure 13: Překlad programů z Clojure do bajtkódu JVM II:<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-13-preklad-programu-z-clojure-do-bajtkodu-jvm-pokracovani/">http://www.root.cz/clanky/programovaci-jazyk-clojure-13-preklad-programu-z-clojure-do-bajtkodu-jvm-pokracovani/</a>
+</li>
+
+<li>Clojure 14: Základy práce se systémem maker<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-14-zaklady-prace-se-systemem-maker/">http://www.root.cz/clanky/programovaci-jazyk-clojure-14-zaklady-prace-se-systemem-maker/</a>
+</li>
+
+<li>Clojure 15: Tvorba uživatelských maker<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-15-tvorba-uzivatelskych-maker/">http://www.root.cz/clanky/programovaci-jazyk-clojure-15-tvorba-uzivatelskych-maker/</a>
+</li>
+
+<li>Programovací jazyk Clojure – triky při práci s řetězci<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-triky-pri-praci-s-retezci/">http://www.root.cz/clanky/programovaci-jazyk-clojure-triky-pri-praci-s-retezci/</a>
+</li>
+
+<li>Programovací jazyk Clojure – triky při práci s kolekcemi<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-triky-pri-praci-s-kolekcemi/">http://www.root.cz/clanky/programovaci-jazyk-clojure-triky-pri-praci-s-kolekcemi/</a>
+</li>
+
+<li>Programovací jazyk Clojure – práce s mapami a množinami<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-prace-s-mapami-a-mnozinami/">http://www.root.cz/clanky/programovaci-jazyk-clojure-prace-s-mapami-a-mnozinami/</a>
+</li>
+
+<li>Programovací jazyk Clojure – základy zpracování XML<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-zaklady-zpracovani-xml/">http://www.root.cz/clanky/programovaci-jazyk-clojure-zaklady-zpracovani-xml/</a>
+</li>
+
+<li>Programovací jazyk Clojure – testování s využitím knihovny Expectations<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-testovani-s-vyuzitim-knihovny-expectations/">http://www.root.cz/clanky/programovaci-jazyk-clojure-testovani-s-vyuzitim-knihovny-expectations/</a>
+</li>
+
+<li>Programovací jazyk Clojure – některé užitečné triky použitelné (nejenom) v&nbsp;testech<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-nektere-uzitecne-triky-pouzitelne-nejenom-v-testech/">http://www.root.cz/clanky/programovaci-jazyk-clojure-nektere-uzitecne-triky-pouzitelne-nejenom-v-testech/</a>
+</li>
+
+<li>Enlive – výkonný šablonovací systém pro jazyk Clojure<br/>
+<a href="http://www.root.cz/clanky/enlive-vykonny-sablonovaci-system-pro-jazyk-clojure/">http://www.root.cz/clanky/enlive-vykonny-sablonovaci-system-pro-jazyk-clojure/</a>
+</li>
+
+<li>Nástroj Leiningen a programovací jazyk Clojure: tvorba vlastních knihoven pro veřejný repositář Clojars<br />
+<a href="http://www.root.cz/clanky/nastroj-leiningen-a-programovaci-jazyk-clojure-tvorba-vlastnich-knihoven-pro-verejny-repositar-clojars/">http://www.root.cz/clanky/nastroj-leiningen-a-programovaci-jazyk-clojure-tvorba-vlastnich-knihoven-pro-verejny-repositar-clojars/</a>
+</li>
+
+<li>Novinky v Clojure verze 1.8.0<br />
+<a href="http://www.root.cz/clanky/novinky-v-clojure-verze-1-8-0/">http://www.root.cz/clanky/novinky-v-clojure-verze-1-8-0/</a>
+</li>
+
+<li>Asynchronní programování v&nbsp;Clojure s&nbsp;využitím knihovny core.async<br />
+<a href="http://www.root.cz/clanky/asynchronni-programovani-v-clojure-s-vyuzitim-knihovny-core-async/">http://www.root.cz/clanky/asynchronni-programovani-v-clojure-s-vyuzitim-knihovny-core-async/</a>
+</li>
+
+<li>Asynchronní programování v&nbsp;Clojure s&nbsp;využitím knihovny core.async (pokračování)<br />
+<a href="http://www.root.cz/clanky/asynchronni-programovani-v-clojure-s-vyuzitim-knihovny-core-async-pokracovani/">http://www.root.cz/clanky/asynchronni-programovani-v-clojure-s-vyuzitim-knihovny-core-async-pokracovani/</a>
+</li>
+
+<li>Asynchronní programování v Clojure s využitím knihovny core.async (dokončení)<br />
+<a href="http://www.root.cz/clanky/asynchronni-programovani-v-clojure-s-vyuzitim-knihovny-core-async-dokonceni/">http://www.root.cz/clanky/asynchronni-programovani-v-clojure-s-vyuzitim-knihovny-core-async-dokonceni/</a>
+</li>
+
+<li>Vytváříme IRC bota v programovacím jazyce Clojure<br />
+<a href="http://www.root.cz/clanky/vytvarime-irc-bota-v-programovacim-jazyce-clojure/">http://www.root.cz/clanky/vytvarime-irc-bota-v-programovacim-jazyce-clojure/</a>
+</li>
+
+<li>Gorilla REPL: interaktivní prostředí pro programovací jazyk Clojure<br />
+<a href="https://www.root.cz/clanky/gorilla-repl-interaktivni-prostredi-pro-programovaci-jazyk-clojure/">https://www.root.cz/clanky/gorilla-repl-interaktivni-prostredi-pro-programovaci-jazyk-clojure/</a>
+</li>
+
+<li>Multimetody v Clojure aneb polymorfismus bez použití OOP<br />
+<a href="https://www.root.cz/clanky/multimetody-v-clojure-aneb-polymorfismus-bez-pouziti-oop/">https://www.root.cz/clanky/multimetody-v-clojure-aneb-polymorfismus-bez-pouziti-oop/</a>
+</li>
+
+<li>Práce s externími Java archivy v programovacím jazyku Clojure<br />
+<a href="https://www.root.cz/clanky/prace-s-externimi-java-archivy-v-programovacim-jazyku-clojure/">https://www.root.cz/clanky/prace-s-externimi-java-archivy-v-programovacim-jazyku-clojure/</a>
+</li>
+
+<li>Clojure 16: Složitější uživatelská makra<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-16-slozitejsi-uzivatelska-makra/">http://www.root.cz/clanky/programovaci-jazyk-clojure-16-slozitejsi-uzivatelska-makra/</a>
+</li>
+
+<li>Clojure 17: Využití standardních maker v praxi<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-17-vyuziti-standardnich-maker-v-praxi/">http://www.root.cz/clanky/programovaci-jazyk-clojure-17-vyuziti-standardnich-maker-v-praxi/</a>
+</li>
+
+<li>Clojure 18: Základní techniky optimalizace aplikací<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-18-zakladni-techniky-optimalizace-aplikaci/">http://www.root.cz/clanky/programovaci-jazyk-clojure-18-zakladni-techniky-optimalizace-aplikaci/</a>
+</li>
+
+<li>Clojure 19: Vývojová prostředí pro Clojure<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-19-vyvojova-prostredi-pro-clojure/">http://www.root.cz/clanky/programovaci-jazyk-clojure-19-vyvojova-prostredi-pro-clojure/</a>
+</li>
+
+<li>Clojure 20: Vývojová prostředí pro Clojure (Vimu s REPL)<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-20-vyvojova-prostredi-pro-clojure-integrace-vimu-s-repl/">http://www.root.cz/clanky/programovaci-jazyk-clojure-20-vyvojova-prostredi-pro-clojure-integrace-vimu-s-repl/</a>
+</li>
+
+<li>Clojure 21: ClojureScript aneb překlad Clojure do JS<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-21-clojurescript-aneb-preklad-clojure-do-javascriptu/">http://www.root.cz/clanky/programovaci-jazyk-clojure-21-clojurescript-aneb-preklad-clojure-do-javascriptu/</a>
+</li>
+
+<li>Leiningen: nástroj pro správu projektů napsaných v Clojure<br />
+<a href="http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure/">http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure/</a>
+</li>
+
+<li>Leiningen: nástroj pro správu projektů napsaných v Clojure (2)<br />
+<a href="http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-2/">http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-2/</a>
+</li>
+
+<li>Leiningen: nástroj pro správu projektů napsaných v Clojure (3)<br />
+<a href="http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-3/">http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-3/</a>
+</li>
+
+<li>Leiningen: nástroj pro správu projektů napsaných v Clojure (4)<br />
+<a href="http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-4/">http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-4/</a>
+</li>
+
+<li>Leiningen: nástroj pro správu projektů napsaných v Clojure (5)<br />
+<a href="http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-5/">http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-5/</a>
+</li>
+
+<li>Leiningen: nástroj pro správu projektů napsaných v Clojure (6)<br />
+<a href="http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-6/">http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-6/</a>
+</li>
+
+<li>Programovací jazyk Clojure a databáze (1.část)<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-a-databaze-1-cast/">http://www.root.cz/clanky/programovaci-jazyk-clojure-a-databaze-1-cast/</a>
+</li>
+
+<li>Pluginy pro Leiningen<br />
+<a href="http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-pluginy-pro-leiningen/">http://www.root.cz/clanky/leiningen-nastroj-pro-spravu-projektu-napsanych-v-clojure-pluginy-pro-leiningen/</a>
+</li>
+
+<li>Programovací jazyk Clojure a knihovny pro práci s vektory a maticemi<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-a-knihovny-pro-praci-s-vektory-a-maticemi/">http://www.root.cz/clanky/programovaci-jazyk-clojure-a-knihovny-pro-praci-s-vektory-a-maticemi/</a>
+</li>
+
+<li>Programovací jazyk Clojure a knihovny pro práci s vektory a maticemi (2)<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-a-knihovny-pro-praci-s-vektory-a-maticemi-2/">http://www.root.cz/clanky/programovaci-jazyk-clojure-a-knihovny-pro-praci-s-vektory-a-maticemi-2/</a>
+</li>
+
+<li>Programovací jazyk Clojure: syntéza procedurálních textur s využitím knihovny Clisk<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-synteza-proceduralnich-textur-s-vyuzitim-knihovny-clisk/">http://www.root.cz/clanky/programovaci-jazyk-clojure-synteza-proceduralnich-textur-s-vyuzitim-knihovny-clisk/</a>
+</li>
+
+<li>Programovací jazyk Clojure: syntéza procedurálních textur s využitím knihovny Clisk (2)<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-synteza-proceduralnich-textur-s-vyuzitim-knihovny-clisk-2/">http://www.root.cz/clanky/programovaci-jazyk-clojure-synteza-proceduralnich-textur-s-vyuzitim-knihovny-clisk-2/</a>
+</li>
+
+<li>Seesaw: knihovna pro snadnou tvorbu GUI v jazyce Clojure<br />
+<a href="http://www.root.cz/clanky/seesaw-knihovna-pro-snadnou-tvorbu-gui-v-jazyce-clojure/">http://www.root.cz/clanky/seesaw-knihovna-pro-snadnou-tvorbu-gui-v-jazyce-clojure/</a>
+</li>
+
+<li>Seesaw: knihovna pro snadnou tvorbu GUI v jazyce Clojure (2)<br />
+<a href="http://www.root.cz/clanky/seesaw-knihovna-pro-snadnou-tvorbu-gui-v-jazyce-clojure-2/">http://www.root.cz/clanky/seesaw-knihovna-pro-snadnou-tvorbu-gui-v-jazyce-clojure-2/</a>
+</li>
+
+<li>Seesaw: knihovna pro snadnou tvorbu GUI v jazyce Clojure (3)<br />
+<a href="http://www.root.cz/clanky/seesaw-knihovna-pro-snadnou-tvorbu-gui-v-jazyce-clojure-3/">http://www.root.cz/clanky/seesaw-knihovna-pro-snadnou-tvorbu-gui-v-jazyce-clojure-3/</a>
+</li>
+
+<li>Programovací jazyk Clojure a práce s Gitem<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-a-prace-s-gitem/">http://www.root.cz/clanky/programovaci-jazyk-clojure-a-prace-s-gitem/</a>
+</li>
+
+<li>Programovací jazyk Clojure a práce s Gitem (2)<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-a-prace-s-gitem-2/">http://www.root.cz/clanky/programovaci-jazyk-clojure-a-prace-s-gitem-2/</a>
+</li>
+
+<li>Programovací jazyk Clojure: syntéza procedurálních textur s využitím knihovny Clisk (dokončení)<br />
+<a href="http://www.root.cz/clanky/programovaci-jazyk-clojure-synteza-proceduralnich-textur-s-vyuzitim-knihovny-clisk-dokonceni/">http://www.root.cz/clanky/programovaci-jazyk-clojure-synteza-proceduralnich-textur-s-vyuzitim-knihovny-clisk-dokonceni/</a>
+</li>
+
+<li>Pixie: lehký skriptovací jazyk s „kouzelnými“ schopnostmi<br />
+<a href="https://www.root.cz/clanky/pixie-lehky-skriptovaci-jazyk-s-kouzelnymi-schopnostmi/">https://www.root.cz/clanky/pixie-lehky-skriptovaci-jazyk-s-kouzelnymi-schopnostmi/</a>
+</li>
+
+<li>Programovací jazyk Pixie: funkce ze základní knihovny a použití FFI<br />
+<a href="https://www.root.cz/clanky/programovaci-jazyk-pixie-funkce-ze-zakladni-knihovny-a-pouziti-ffi/">https://www.root.cz/clanky/programovaci-jazyk-pixie-funkce-ze-zakladni-knihovny-a-pouziti-ffi/</a>
+</li>
+
+<li>Novinky v Clojure verze 1.9.0<br />
+<a href="https://www.root.cz/clanky/novinky-v-clojure-verze-1-9-0/">https://www.root.cz/clanky/novinky-v-clojure-verze-1-9-0/</a>
+</li>
+
+<li>Validace dat s&nbsp;využitím knihovny spec v&nbsp;Clojure 1.9.0<br />
+<a href="https://www.root.cz/clanky/validace-dat-s-vyuzitim-knihovny-spec-v-clojure-1-9-0/">https://www.root.cz/clanky/validace-dat-s-vyuzitim-knihovny-spec-v-clojure-1-9-0/</a>
+</li>
+
+<li>Použití jazyka Gherkin při tvorbě testovacích scénářů pro aplikace psané v Clojure<br />
+<a href="https://www.root.cz/clanky/pouziti-jazyka-gherkin-pri-tvorbe-testovacich-scenaru-pro-aplikace-psane-v-nbsp-clojure/">https://www.root.cz/clanky/pouziti-jazyka-gherkin-pri-tvorbe-testovacich-scenaru-pro-aplikace-psane-v-nbsp-clojure/</a>
+</li>
+
+<li>Použití jazyka Gherkin při tvorbě testovacích scénářů pro aplikace psané v Clojure (2)<br />
+<a href="https://www.root.cz/clanky/pouziti-jazyka-gherkin-pri-tvorbe-testovacich-scenaru-pro-aplikace-psane-v-nbsp-clojure-2/">https://www.root.cz/clanky/pouziti-jazyka-gherkin-pri-tvorbe-testovacich-scenaru-pro-aplikace-psane-v-nbsp-clojure-2/</a>
+</li>
+
+<li>Incanter: prostředí pro statistické výpočty s grafickým výstupem založené na Clojure<br />
+<a href="https://www.root.cz/clanky/incanter-prostredi-pro-statisticke-vypocty-s-grafickym-vystupem-zalozene-na-clojure/">https://www.root.cz/clanky/incanter-prostredi-pro-statisticke-vypocty-s-grafickym-vystupem-zalozene-na-clojure/</a>
+</li>
+
+<li>Incanter: operace s maticemi<br />
+<a href="https://www.root.cz/clanky/incanter-operace-s-maticemi/">https://www.root.cz/clanky/incanter-operace-s-maticemi/</a>
+</li>
+
+<li>Tvorba jednoduchých grafů v systému Incanter<br />
+<a href="https://www.root.cz/clanky/tvorba-jednoduchych-grafu-v-systemu-incanter/">https://www.root.cz/clanky/tvorba-jednoduchych-grafu-v-systemu-incanter/</a>
+</li>
+
+</ol>
+
+
+
+<p><a name="k15"></a></p>
+<h2 id="k15">15. Odkazy na Internetu</h2>
+
+<ol>
+
+<li>Stopa (algebra)<br />
+<a href="https://cs.wikipedia.org/wiki/Stopa_(algebra)">https://cs.wikipedia.org/wiki/Stopa_(algebra)</a>
+</li>
+
+<li>Matrix calculator<br />
+<a href="https://matrixcalc.org/en/">https://matrixcalc.org/en/</a>
+</li>
+
+<li>Incanter is a Clojure-based, R-like platform for statistical computing and graphics.<br />
+<a href="http://incanter.org/">http://incanter.org/</a>
+</li>
+
+<li>Evolution of incanter (Gource Visualization)<br />
+<a href="https://www.youtube.com/watch?v=TVfL5nPELr4">https://www.youtube.com/watch?v=TVfL5nPELr4</a>
+</li>
+
+<li>Questions tagged [incanter] (na Stack Overflow)<br />
+<a href="https://stackoverflow.com/questions/tagged/incanter?sort=active">https://stackoverflow.com/questions/tagged/incanter?sort=active</a>
+</li>
+
+<li>Data Sorcery with Clojure<br />
+<a href="https://data-sorcery.org/contents/">https://data-sorcery.org/contents/</a>
+</li>
+
+<li>Back to the Future: Lisp as a Base for a Statistical Computing System<br />
+<a href="https://rd.springer.com/chapter/10.1007/978-3-7908-2084-3_2">https://rd.springer.com/chapter/10.1007/978-3-7908-2084-3_2</a>
+</li>
+
+<li>Incanter Cheat Sheet<br />
+<a href="http://incanter.org/docs/incanter-cheat-sheet.pdf">http://incanter.org/docs/incanter-cheat-sheet.pdf</a>
+</li>
+
+<li>Back to the Future: Lisp as a Base for a Statistical Computing System (celá verze článku)<br />
+<a href="https://www.researchgate.net/publication/227019917_Back_to_the_Future_Lisp_as_a_Base_for_a_Statistical_Computing_System">https://www.researchgate.net/publication/227019917_Back_to_the_Future_Lisp_as_a_Base_for_a_Statistical_Computing_System</a>
+</li>
+
+<li>Lisp-Stat Information<br />
+<a href="http://homepage.cs.uiowa.edu/~luke/xls/xlsinfo/">http://homepage.cs.uiowa.edu/~luke/xls/xlsinfo/</a>
+</li>
+
+<li>Sample Plots in Incanter<br />
+<a href="https://github.com/incanter/incanter/wiki/Sample-Plots-in-Incanter#line">https://github.com/incanter/incanter/wiki/Sample-Plots-in-Incanter#line</a>
+</li>
+
+<li>vectorz-clj<br />
+<a href="https://github.com/mikera/vectorz-clj">https://github.com/mikera/vectorz-clj</a>
+</li>
+
+<li>vectorz - Examples<br />
+<a href="https://github.com/mikera/vectorz-clj/wiki/Examples">https://github.com/mikera/vectorz-clj/wiki/Examples</a>
+</li>
+
+<li>Array Programming<br />
+<a href="https://en.wikipedia.org/wiki/Array_programming">https://en.wikipedia.org/wiki/Array_programming</a>
+</li>
+
+<li>Discovering Array Languages<br />
+<a href="http://archive.vector.org.uk/art10008110">http://archive.vector.org.uk/art10008110</a>
+</li>
+
+<li>no stinking loops -- Kalothi<br />
+<a href="http://www.nsl.com/">http://www.nsl.com/</a>
+</li>
+
+<li>Vector (obsahuje odkazy na články, knihy a blogy o programovacích jazycích APL, J a K)<br />
+<a href="http://www.vector.org.uk/">http://www.vector.org.uk/</a>
+</li>
+
+<li>Colt<br />
+<a href="http://dst.lbl.gov/ACSSoftware/colt/">http://dst.lbl.gov/ACSSoftware/colt/</a>
+</li>
+
+<li>Parallel Colt: Open Source Libraries for High Performance Scientific and Technical Computing in Java<br />
+<a href="http://incanter.org/docs/parallelcolt/api/">http://incanter.org/docs/parallelcolt/api/</a>
+</li>
+
+<li>Processing<br />
+<a href="https://www.processing.org/">https://www.processing.org/</a>
+</li>
+
+<li>The R Project for Statistical Computing<br />
+<a href="https://www.r-project.org/">https://www.r-project.org/</a>
+</li>
+
+<li>Humane test output for clojure.test<br />
+<a href="https://github.com/pjstadig/humane-test-output">https://github.com/pjstadig/humane-test-output</a>
+</li>
+
+<li>iota<br />
+<a href="https://github.com/juxt/iota">https://github.com/juxt/iota</a>
+</li>
+
+<li>5 Differences between clojure.spec and Schema<br />
+<a href="https://lispcast.com/clojure.spec-vs-schema/">https://lispcast.com/clojure.spec-vs-schema/</a>
+</li>
+
+<li>Schema: Clojure(Script) library for declarative data description and validation<br />
+<a href="https://github.com/plumatic/schema">https://github.com/plumatic/schema</a>
+</li>
+
+<li>Zip archiv s&nbsp;Clojure 1.9.0<br />
+<a href="http://repo1.maven.org/maven2/org/clojure/clojure/1.9.0/clojure-1.9.0.zip">http://repo1.maven.org/maven2/org/clojure/clojure/1.9.0/clojure-1.9.0.zip</a>
+</li>
+
+<li>Clojure 1.9 is now available<br />
+<a href="https://clojure.org/news/2017/12/08/clojure19">https://clojure.org/news/2017/12/08/clojure19</a>
+</li>
+
+<li>Deps and CLI Guide<br />
+<a href="https://clojure.org/guides/deps_and_cli">https://clojure.org/guides/deps_and_cli</a>
+</li>
+
+<li>Changes to Clojure in Version 1.9<br />
+<a href="https://github.com/clojure/clojure/blob/master/changes.md">https://github.com/clojure/clojure/blob/master/changes.md</a>
+</li>
+
+<li>clojure.spec - Rationale and Overview<br />
+<a href="https://clojure.org/about/spec">https://clojure.org/about/spec</a>
+</li>
+
+<li>Zip archiv s&nbsp;Clojure 1.8.0<br />
+<a href="http://repo1.maven.org/maven2/org/clojure/clojure/1.8.0/clojure-1.8.0.zip">http://repo1.maven.org/maven2/org/clojure/clojure/1.8.0/clojure-1.8.0.zip</a>
+</li>
+
+<li>Clojure 1.8 is now available<br />
+<a href="http://clojure.org/news/2016/01/19/clojure18">http://clojure.org/news/2016/01/19/clojure18</a>
+</li>
+
+<li>Socket Server REPL<br />
+<a href="http://dev.clojure.org/display/design/Socket+Server+REPL">http://dev.clojure.org/display/design/Socket+Server+REPL</a>
+</li>
+
+<li>CLJ-1671: Clojure socket server<br />
+<a href="http://dev.clojure.org/jira/browse/CLJ-1671">http://dev.clojure.org/jira/browse/CLJ-1671</a>
+</li>
+
+<li>CLJ-1449: Add clojure.string functions for portability to ClojureScript<br />
+<a href="http://dev.clojure.org/jira/browse/CLJ-1449">http://dev.clojure.org/jira/browse/CLJ-1449</a>
+</li>
+
+<li>Launching a Socket Server<br />
+<a href="http://clojure.org/reference/repl_and_main#_launching_a_socket_server">http://clojure.org/reference/repl_and_main#_launching_a_socket_server</a>
+</li>
+
+<li>API for clojure.string<br />
+<a href="http://clojure.github.io/clojure/branch-master/clojure.string-api.html">http://clojure.github.io/clojure/branch-master/clojure.string-api.html</a>
+</li>
+
+<li>Clojars:<br />
+<a href="https://clojars.org/">https://clojars.org/</a>
+</li>
+
+<li>Seznam knihoven na Clojars:<br />
+<a href="https://clojars.org/projects">https://clojars.org/projects</a>
+</li>
+
+<li>Clojure Cookbook: Templating HTML with Enlive<br />
+<a href="https://github.com/clojure-cookbook/clojure-cookbook/blob/master/07_webapps/7-11_enlive.asciidoc">https://github.com/clojure-cookbook/clojure-cookbook/blob/master/07_webapps/7-11_enlive.asciidoc</a>
+</li>
+
+<li>An Introduction to Enlive<br />
+<a href="https://github.com/swannodette/enlive-tutorial/">https://github.com/swannodette/enlive-tutorial/</a>
+</li>
+
+<li>Enlive na GitHubu<br />
+<a href="https://github.com/cgrand/enlive">https://github.com/cgrand/enlive</a>
+</li>
+
+<li>Expectations: příklady atd.<br />
+<a href="http://jayfields.com/expectations/">http://jayfields.com/expectations/</a>
+</li>
+
+<li>Expectations na GitHubu<br />
+<a href="https://github.com/jaycfields/expectations">https://github.com/jaycfields/expectations</a>
+</li>
+
+<li>Lein-expectations na GitHubu<br />
+<a href="https://github.com/gar3thjon3s/lein-expectations">https://github.com/gar3thjon3s/lein-expectations</a>
+</li>
+
+<li>Testing Clojure With Expectations<br />
+<a href="https://semaphoreci.com/blog/2014/09/23/testing-clojure-with-expectations.html">https://semaphoreci.com/blog/2014/09/23/testing-clojure-with-expectations.html</a>
+</li>
+
+<li>Clojure testing TDD/BDD libraries: clojure.test vs Midje vs Expectations vs Speclj<br />
+<a href="https://www.reddit.com/r/Clojure/comments/1viilt/clojure_testing_tddbdd_libraries_clojuretest_vs/">https://www.reddit.com/r/Clojure/comments/1viilt/clojure_testing_tddbdd_libraries_clojuretest_vs/</a>
+</li>
+
+<li>Testing: One assertion per test<br />
+<a href="http://blog.jayfields.com/2007/06/testing-one-assertion-per-test.html">http://blog.jayfields.com/2007/06/testing-one-assertion-per-test.html</a>
+</li>
+
+<li>Rewriting Your Test Suite in Clojure in 24 hours<br />
+<a href="http://blog.circleci.com/rewriting-your-test-suite-in-clojure-in-24-hours/">http://blog.circleci.com/rewriting-your-test-suite-in-clojure-in-24-hours/</a>
+</li>
+
+<li>Clojure doc: zipper<br />
+<a href="http://clojuredocs.org/clojure.zip/zipper">http://clojuredocs.org/clojure.zip/zipper</a>
+</li>
+
+<li>Clojure doc: parse<br />
+<a href="http://clojuredocs.org/clojure.xml/parse">http://clojuredocs.org/clojure.xml/parse</a>
+</li>
+
+<li>Clojure doc: xml-zip<br />
+<a href="http://clojuredocs.org/clojure.zip/xml-zip">http://clojuredocs.org/clojure.zip/xml-zip</a>
+</li>
+
+<li>Clojure doc: xml-seq<br />
+<a href="http://clojuredocs.org/clojure.core/xml-seq">http://clojuredocs.org/clojure.core/xml-seq</a>
+</li>
+
+<li>Parsing XML in Clojure<br />
+<a href="https://github.com/clojuredocs/guides">https://github.com/clojuredocs/guides</a>
+</li>
+
+<li>Clojure Zipper Over Nested Vector<br />
+<a href="https://vitalyper.wordpress.com/2010/11/23/clojure-zipper-over-nested-vector/">https://vitalyper.wordpress.com/2010/11/23/clojure-zipper-over-nested-vector/</a>
+</li>
+
+<li>Understanding Clojure's PersistentVector implementation<br />
+<a href="http://blog.higher-order.net/2009/02/01/understanding-clojures-persistentvector-implementation">http://blog.higher-order.net/2009/02/01/understanding-clojures-persistentvector-implementation</a>
+</li>
+
+<li>Understanding Clojure's PersistentHashMap (deftwice...)<br />
+<a href="http://blog.higher-order.net/2009/09/08/understanding-clojures-persistenthashmap-deftwice.html">http://blog.higher-order.net/2009/09/08/understanding-clojures-persistenthashmap-deftwice.html</a>
+</li>
+
+<li>Assoc and Clojure's PersistentHashMap: part ii<br />
+<a href="http://blog.higher-order.net/2010/08/16/assoc-and-clojures-persistenthashmap-part-ii.html">http://blog.higher-order.net/2010/08/16/assoc-and-clojures-persistenthashmap-part-ii.html</a>
+</li>
+
+<li>Ideal Hashtrees (paper)<br />
+<a href="http://lampwww.epfl.ch/papers/idealhashtrees.pdf">http://lampwww.epfl.ch/papers/idealhashtrees.pdf</a>
+</li>
+
+<li>Clojure home page<br />
+<a href="http://clojure.org/">http://clojure.org/</a>
+</li>
+
+<li>Clojure (downloads)<br />
+<a href="http://clojure.org/downloads">http://clojure.org/downloads</a>
+</li>
+
+<li>Clojure Sequences<br />
+<a href="http://clojure.org/sequences">http://clojure.org/sequences</a>
+</li>
+
+<li>Clojure Data Structures<br />
+<a href="http://clojure.org/data_structures">http://clojure.org/data_structures</a>
+</li>
+
+<li>The Structure and Interpretation of Computer Programs: 2.2.1  Representing Sequences<br />
+<a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-15.html#%_sec_2.2.1">http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-15.html#%_sec_2.2.1</a>
+</li>
+
+<li>The Structure and Interpretation of Computer Programs: 3.3.1  Mutable List Structure<br />
+<a href="http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3.1">http://mitpress.mit.edu/sicp/full-text/book/book-Z-H-22.html#%_sec_3.3.1</a>
+</li>
+
+<li>Clojure - Functional Programming for the JVM<br />
+<a href="http://java.ociweb.com/mark/clojure/article.html">http://java.ociweb.com/mark/clojure/article.html</a>
+</li>
+
+<li>Clojure quick reference<br />
+<a href="http://faustus.webatu.com/clj-quick-ref.html">http://faustus.webatu.com/clj-quick-ref.html</a>
+</li>
+
+<li>4Clojure<br />
+<a href="http://www.4clojure.com/">http://www.4clojure.com/</a>
+</li>
+
+<li>ClojureDoc (rozcestník s&nbsp;dokumentací jazyka Clojure)<br />
+<a href="http://clojuredocs.org/">http://clojuredocs.org/</a>
+</li>
+
+<li>Clojure (na Wikipedia EN)<br />
+<a href="http://en.wikipedia.org/wiki/Clojure">http://en.wikipedia.org/wiki/Clojure</a>
+</li>
+
+<li>Clojure (na Wikipedia CS)<br />
+<a href="http://cs.wikipedia.org/wiki/Clojure">http://cs.wikipedia.org/wiki/Clojure</a>
+</li>
+
+<li>SICP (The Structure and Interpretation of Computer Programs)<br />
+<a href="http://mitpress.mit.edu/sicp/">http://mitpress.mit.edu/sicp/</a>
+</li>
+
+<li>Pure function<br />
+<a href="http://en.wikipedia.org/wiki/Pure_function">http://en.wikipedia.org/wiki/Pure_function</a>
+</li>
+
+<li>Funkcionální programování<br />
+<a href="http://cs.wikipedia.org/wiki/Funkcionální_programování">http://cs.wikipedia.org/wiki/Funkcionální_programování</a>
+</li>
+
+<li>Čistě funkcionální (datové struktury, jazyky, programování)<br />
+<a href="http://cs.wikipedia.org/wiki/Čistě_funkcionální">http://cs.wikipedia.org/wiki/Čistě_funkcionální</a>
+</li>
+
+<li>Clojure Macro Tutorial (Part I, Getting the Compiler to Write Your Code For You)<br />
+<a href="http://www.learningclojure.com/2010/09/clojure-macro-tutorial-part-i-getting.html">http://www.learningclojure.com/2010/09/clojure-macro-tutorial-part-i-getting.html</a>
+</li>
+
+<li>Clojure Macro Tutorial (Part II: The Compiler Strikes Back)<br />
+<a href="http://www.learningclojure.com/2010/09/clojure-macro-tutorial-part-ii-compiler.html">http://www.learningclojure.com/2010/09/clojure-macro-tutorial-part-ii-compiler.html</a>
+</li>
+
+<li>Clojure Macro Tutorial (Part III: Syntax Quote)<br />
+<a href="http://www.learningclojure.com/2010/09/clojure-macro-tutorial-part-ii-syntax.html">http://www.learningclojure.com/2010/09/clojure-macro-tutorial-part-ii-syntax.html</a>
+</li>
+
+<li>Tech behind Tech: Clojure Macros Simplified<br />
+<a href="http://techbehindtech.com/2010/09/28/clojure-macros-simplified/">http://techbehindtech.com/2010/09/28/clojure-macros-simplified/</a>
+</li>
+
+<li>Fatvat - Exploring functional programming: Clojure Macros<br />
+<a href="http://www.fatvat.co.uk/2009/02/clojure-macros.html">http://www.fatvat.co.uk/2009/02/clojure-macros.html</a>
+</li>
+
+<li>Eulerovo číslo<br />
+<a href="http://cs.wikipedia.org/wiki/Eulerovo_číslo">http://cs.wikipedia.org/wiki/Eulerovo_číslo</a>
+</li>
+
+<li>List comprehension<br />
+<a href="http://en.wikipedia.org/wiki/List_comprehension">http://en.wikipedia.org/wiki/List_comprehension</a>
+</li>
+
+<li>List Comprehensions in Clojure<br />
+<a href="http://asymmetrical-view.com/2008/11/18/list-comprehensions-in-clojure.html">http://asymmetrical-view.com/2008/11/18/list-comprehensions-in-clojure.html</a>
+</li>
+
+<li>Clojure Programming Concepts: List Comprehension<br />
+<a href="http://en.wikibooks.org/wiki/Clojure_Programming/Concepts#List_Comprehension">http://en.wikibooks.org/wiki/Clojure_Programming/Concepts#List_Comprehension</a>
+</li>
+
+<li>Clojure core API: for macro<br />
+<a href="http://clojure.github.com/clojure/clojure.core-api.html#clojure.core/for">http://clojure.github.com/clojure/clojure.core-api.html#clojure.core/for</a>
+</li>
+
+<li>cirrus machina - The Clojure for macro<br />
+<a href="http://www.cirrusmachina.com/blog/comment/the-clojure-for-macro/">http://www.cirrusmachina.com/blog/comment/the-clojure-for-macro/</a>
+</li>
+
+<li>Riastradh's Lisp Style Rules<br />
+<a href="http://mumble.net/~campbell/scheme/style.txt">http://mumble.net/~campbell/scheme/style.txt</a>
+</li>
+
+<li>Dynamic Languages Strike Back<br />
+<a href="http://steve-yegge.blogspot.cz/2008/05/dynamic-languages-strike-back.html">http://steve-yegge.blogspot.cz/2008/05/dynamic-languages-strike-back.html</a>
+</li>
+
+<li>Scripting: Higher Level Programming for the 21st Century<br />
+<a href="http://www.tcl.tk/doc/scripting.html">http://www.tcl.tk/doc/scripting.html</a>
+</li>
+
+<li>Java Virtual Machine Support for Non-Java Languages<br />
+<a href="http://docs.oracle.com/javase/7/docs/technotes/guides/vm/multiple-language-support.html">http://docs.oracle.com/javase/7/docs/technotes/guides/vm/multiple-language-support.html</a>
+</li>
+
+<li>Třída java.lang.String<br />
+<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/String.html">http://docs.oracle.com/javase/7/docs/api/java/lang/String.html</a>
+</li>
+
+<li>Třída java.lang.StringBuffer<br />
+<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/StringBuffer.html">http://docs.oracle.com/javase/7/docs/api/java/lang/StringBuffer.html</a>
+</li>
+
+<li>Třída java.lang.StringBuilder<br />
+<a href="http://docs.oracle.com/javase/7/docs/api/java/lang/StringBuilder.html">http://docs.oracle.com/javase/7/docs/api/java/lang/StringBuilder.html</a>
+</li>
+
+<li>StringBuffer versus String<br />
+<a href="http://www.javaworld.com/article/2076072/build-ci-sdlc/stringbuffer-versus-string.html">http://www.javaworld.com/article/2076072/build-ci-sdlc/stringbuffer-versus-string.html</a>
+</li>
+
+<li>Threading macro (dokumentace k&nbsp;jazyku Clojure)<br />
+<a href="https://clojure.github.io/clojure/clojure.core-api.html#clojure.core/-&gt;">https://clojure.github.io/clojure/clojure.core-api.html#clojure.core/-&gt;</a>
+</li>
+
+<li>Understanding the Clojure -&gt; macro<br />
+<a href="http://blog.fogus.me/2009/09/04/understanding-the-clojure-macro/">http://blog.fogus.me/2009/09/04/understanding-the-clojure-macro/</a>
+</li>
+
+<li>clojure.inspector<br />
+<a href="http://clojure.github.io/clojure/clojure.inspector-api.html">http://clojure.github.io/clojure/clojure.inspector-api.html</a>
+</li>
+
+<li>The Clojure Toolbox<br />
+<a href="http://www.clojure-toolbox.com/">http://www.clojure-toolbox.com/</a>
+</li>
+
+<li>Unit Testing in Clojure<br />
+<a href="http://nakkaya.com/2009/11/18/unit-testing-in-clojure/">http://nakkaya.com/2009/11/18/unit-testing-in-clojure/</a>
+</li>
+
+<li>Testing in Clojure (Part-1: Unit testing)<br />
+<a href="http://blog.knoldus.com/2014/03/22/testing-in-clojure-part-1-unit-testing/">http://blog.knoldus.com/2014/03/22/testing-in-clojure-part-1-unit-testing/</a>
+</li>
+
+<li>API for clojure.test - Clojure v1.6 (stable)<br />
+<a href="https://clojure.github.io/clojure/clojure.test-api.html">https://clojure.github.io/clojure/clojure.test-api.html</a>
+</li>
+
+<li>Leiningen: úvodní stránka<br />
+<a href="http://leiningen.org/">http://leiningen.org/</a>
+</li>
+
+<li>Leiningen: Git repository<br />
+<a href="https://github.com/technomancy/leiningen">https://github.com/technomancy/leiningen</a>
+</li>
+
+<li>leiningen-win-installer<br />
+<a href="http://leiningen-win-installer.djpowell.net/">http://leiningen-win-installer.djpowell.net/</a>
+</li>
+
+<li>Clojure.org: Vars and the Global Environment<br />
+<a href="http://clojure.org/Vars">http://clojure.org/Vars</a>
+</li>
+
+<li>Clojure.org: Refs and Transactions<br />
+<a href="http://clojure.org/Refs">http://clojure.org/Refs</a>
+</li>
+
+<li>Clojure.org: Atoms<br />
+<a href="http://clojure.org/Atoms">http://clojure.org/Atoms</a>
+</li>
+
+<li>Clojure.org: Agents as Asynchronous Actions<br />
+<a href="http://clojure.org/agents">http://clojure.org/agents</a>
+</li>
+
+<li>Transient Data Structures<br />
+<a href="http://clojure.org/transients">http://clojure.org/transients</a>
+</li>
+
+<li>Center Incanter histogram x-axis tick marks directly underneath bars<br />
+<a href="https://stackoverflow.com/questions/27991054/center-incanter-histogram-x-axis-tick-marks-directly-underneath-bars#27992128">https://stackoverflow.com/questions/27991054/center-incanter-histogram-x-axis-tick-marks-directly-underneath-bars#27992128</a>
+</li>
+
+</ol>
+
+
+
+<p></p><p></p>
+<p><small>Autor: <a href="http://www.fit.vutbr.cz/~tisnovpa">Pavel Tišnovský</a> &nbsp; 2018</small></p>
+</body>
+</html>
+
